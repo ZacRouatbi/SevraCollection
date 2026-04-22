@@ -18,77 +18,117 @@
     <div class="flex justify-center gap-8 mb-8" style="border-bottom: 1px solid rgba(118,128,100,0.15)">
       <button class="modal-tab active" data-tab="login">Connexion</button>
       <button class="modal-tab" data-tab="register">Créer un compte</button>
-      <button class="modal-tab" data-tab="reset">Mot de passe</button>
+      <button class="modal-tab" data-tab="reset">réinitialisation</button>
     </div>
 
     {# ═══ LOGIN ════════════════════════════════════════════════ #}
-    <div data-panel="login" class="modal-panel">
-      <p class="font-display italic font-light text-center mb-8"
-         style="font-size:1.75rem; color:var(--c-shadow)">Bon retour.</p>
 
-      <form method="POST" action="{{ path('login_check') }}" class="space-y-5">
+{# ═══ LOGIN ════════════════════════════════════════════════ #}
+<div data-panel="login" class="modal-panel">
+    <p class="font-display italic font-light text-center mb-8"
+       style="font-size:1.75rem; color:var(--c-shadow)">Bon retour.</p>
+
+    {# --- Error Display Logic --- #}
+    {% set auth_error = null %}
+    {% set email_value = '' %}
+
+    {# Check multiple sources for error #}
+    {% if error is defined and error %}
+        {% set auth_error = error %}
+    {% elseif app.session is defined and app.session.has('_security.last_error') %}
+        {% set auth_error = app.session.get('_security.last_error') %}
+    {% elseif app.session is defined and app.session.has('_security.main.last_error') %}
+        {% set auth_error = app.session.get('_security.main.last_error') %}
+    {% endif %}
+
+    {# Get last username #}
+    {% if last_username is defined and last_username %}
+        {% set email_value = last_username %}
+    {% elseif app.session is defined and app.session.has('_security.last_username') %}
+        {% set email_value = app.session.get('_security.last_username') %}
+    {% elseif app.session is defined and app.session.has('_security.main.last_username') %}
+        {% set email_value = app.session.get('_security.main.last_username') %}
+    {% endif %}
+
+    {% if auth_error %}
+        <div id="auth-error-display" class="mb-6 py-3 px-4 text-center"
+             style="background: rgba(217, 83, 79, 0.05); border: 1px solid rgba(217, 83, 79, 0.2);
+                    color:#d9534f; font-size:0.75rem; font-family:var(--font-body); border-radius: 2px;">
+            {{ auth_error.messageKey|trans(auth_error.messageData, 'security') }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ path('login_check') }}" class="space-y-5">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
         <div>
-          <label class="input-label" for="login-email">E-mail</label>
-          <input class="input-field" type="email" id="login-email" name="email"
-                 autocomplete="email" required placeholder="votre@email.com">
+            <label class="input-label" for="login-email">E-mail</label>
+            <input class="input-field" type="email" id="login-email" name="email"
+                   autocomplete="email" required placeholder="votre@email.com"
+                   value="{{ email_value }}">
         </div>
         <div>
-          <label class="input-label" for="login-password">Mot de passe</label>
-          <input class="input-field" type="password" id="login-password" name="password"
-                 autocomplete="current-password" required placeholder="••••••••">
+            <label class="input-label" for="login-password">Mot de passe</label>
+            <input class="input-field" type="password" id="login-password" name="password"
+                   autocomplete="current-password" required placeholder="••••••••">
         </div>
         <div class="flex justify-end -mt-2">
-          <button type="button"
-                  style="font-size:0.7rem; color:var(--c-mauve); font-family:var(--font-body); background:none; border:none; cursor:pointer;"
-                  onmouseover="this.style.color='var(--c-olive)'"
-                  onmouseout="this.style.color='var(--c-mauve)'"
-                  onclick="document.querySelector('[data-tab=reset]').click()">
-            Mot de passe oublié ?
-          </button>
+            <button type="button"
+                    style="font-size:0.7rem; color:var(--c-mauve); font-family:var(--font-body); background:none; border:none; cursor:pointer;"
+                    onmouseover="this.style.color='var(--c-olive)'"
+                    onmouseout="this.style.color='var(--c-mauve)'"
+                    onclick="document.querySelector('[data-tab=reset]').click()">
+                Mot de passe oublié ?
+            </button>
         </div>
         <button type="submit" class="btn-primary w-full justify-center">
-          Se connecter
+            Se connecter
         </button>
-      </form>
+    </form>
 
-      <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
+    <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
         Pas encore de compte ?
         <button style="color:var(--c-olive); background:none; border:none; cursor:pointer; font-size:0.72rem; font-family:var(--font-body);"
                 onclick="document.querySelector('[data-tab=register]').click()">
-          S'inscrire
+            S'inscrire
         </button>
-      </p>
-    </div>
-
+    </p>
+</div>
     {# ═══ REGISTER ═════════════════════════════════════════════ #}
     <div data-panel="register" class="modal-panel hidden">
       <p class="font-display italic font-light text-center mb-8"
          style="font-size:1.75rem; color:var(--c-shadow)">Rejoindre Sevra.</p>
 
-      <form method="POST" action="{{ path('register') }}" class="space-y-5">
+      <form method="POST" action="{{ path('register') }}" class="space-y-5" id="reg-form" novalidate>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="input-label" for="reg-firstname">Prénom</label>
             <input class="input-field" type="text" id="reg-firstname" name="first_name"
                    required autocomplete="given-name" placeholder="Yasmine">
+            <p id="firstname-hint" class="field-hint"></p>
           </div>
           <div>
             <label class="input-label" for="reg-lastname">Nom</label>
             <input class="input-field" type="text" id="reg-lastname" name="last_name"
                    required autocomplete="family-name" placeholder="Aziz">
+            <p id="lastname-hint" class="field-hint"></p>
           </div>
         </div>
         <div>
           <label class="input-label" for="reg-email">E-mail</label>
           <input class="input-field" type="email" id="reg-email" name="email"
                  required autocomplete="email" placeholder="votre@email.com">
+          <p id="email-hint" class="field-hint"></p>
         </div>
         <div>
           <label class="input-label" for="reg-password">Mot de passe</label>
           <input class="input-field" type="password" id="reg-password" name="password"
-                 required autocomplete="new-password" placeholder="Min. 8 caractères">
+                 required autocomplete="new-password" placeholder="Min. 8 caractères + spécial">
+          <p id="password-hint" class="field-hint"></p>
         </div>
-        <button type="submit" class="btn-primary w-full justify-center">
+        <button type="submit" id="reg-submit" class="btn-primary w-full justify-center">
           Créer mon compte
         </button>
       </form>
@@ -104,6 +144,7 @@
       </p>
 
       <form method="POST" action="{{ path('reset_password') }}" class="space-y-5" id="reset-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('reset_password') }}">
         <div>
           <label class="input-label" for="reset-email">E-mail</label>
           <input class="input-field" type="email" id="reset-email" name="email"
@@ -123,7 +164,136 @@
   </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modalOverlay = document.getElementById('auth-modal');
+    const modalBox = document.querySelector('.modal-box');
+    const closeBtn = document.getElementById('modal-close');
+
+    // Function to check for errors and open modal
+    function checkAndOpenModal() {
+        // Check for error display element
+        const errorDisplay = document.getElementById('auth-error-display');
+
+        // Check for show_login_modal flag (passed from template)
+        const showModalFlag = {{ show_login_modal is defined and show_login_modal ? 'true' : 'false' }};
+
+        // Check URL hash
+        const hasLoginHash = window.location.hash === '#login';
+
+        if (errorDisplay || showModalFlag === 'true' || hasLoginHash) {
+            if (modalOverlay) {
+                modalOverlay.classList.add('is-open');
+                // Switch to login tab
+                const loginTab = document.querySelector('[data-tab="login"]');
+                if (loginTab) loginTab.click();
+            }
+        }
+    }
+
+    // Check immediately
+    checkAndOpenModal();
+
+    // Also check after a short delay (for dynamically added errors)
+    setTimeout(checkAndOpenModal, 100);
+
+    // 2. MODAL SENSITIVITY PROTECTION (Mousedown/Mouseup logic)
+    let clickStartedInside = false;
+
+    if (modalBox) {
+        modalBox.addEventListener('mousedown', () => {
+            clickStartedInside = true;
+        });
+    }
+
+    if (modalOverlay) {
+        modalOverlay.addEventListener('mousedown', (e) => {
+            if (e.target === modalOverlay) {
+                clickStartedInside = false;
+            }
+        });
+
+        modalOverlay.addEventListener('mouseup', (e) => {
+            if (!clickStartedInside && e.target === modalOverlay) {
+                modalOverlay.classList.remove('is-open');
+                // Clear URL hash if present
+                if (window.location.hash === '#login') {
+                    history.pushState("", document.title, window.location.pathname + window.location.search);
+                }
+            }
+            clickStartedInside = false;
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('is-open');
+            // Clear URL hash if present
+            if (window.location.hash === '#login') {
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+            }
+        });
+    }
+
+    // 3. TABS SWITCHING LOGIC
+    const tabs = document.querySelectorAll('.modal-tab');
+    const panels = document.querySelectorAll('.modal-panel');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            panels.forEach(p => p.classList.add('hidden'));
+            const targetPanel = document.querySelector(`[data-panel="${target}"]`);
+            if (targetPanel) targetPanel.classList.remove('hidden');
+        });
+    });
+
+    // 4. INPUT VALIDATION (Blur & No Numbers)
+    const fields = [
+        { id: 'reg-firstname', hintId: 'firstname-hint', regex: /^[^0-9]+$/, msg: "Le prénom ne doit pas contenir de chiffres." },
+        { id: 'reg-lastname', hintId: 'lastname-hint', regex: /^[^0-9]+$/, msg: "Le nom ne doit pas contenir de chiffres." },
+        { id: 'reg-email', hintId: 'email-hint', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Veuillez entrer un email valide." },
+        { id: 'reg-password', hintId: 'password-hint', regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/, msg: "8+ caractères, Maj, Chiffre, Symbole." }
+    ];
+
+    fields.forEach(field => {
+        const input = document.getElementById(field.id);
+        const hint = document.getElementById(field.hintId);
+
+        if (!input) return;
+
+        input.addEventListener('blur', () => {
+            const val = input.value.trim();
+            if (val === "") return;
+
+            if (field.regex.test(val)) {
+                hint.textContent = "";
+                input.style.borderColor = "var(--c-olive)";
+            } else {
+                hint.textContent = field.msg;
+                input.style.borderColor = "#d9534f";
+            }
+        });
+
+        input.addEventListener('input', () => {
+            hint.textContent = "";
+            input.style.borderColor = "rgba(118,128,100,0.2)";
+        });
+    });
+});
+</script>
+
 <style>
+  .field-hint {
+    font-size: 0.65rem;
+    color: #d9534f;
+    margin-top: 0.35rem;
+    min-height: 1.1em;
+    font-family: var(--font-body);
+  }
+
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -142,7 +312,6 @@
     opacity: 1;
     pointer-events: all;
   }
-
   .modal-box {
     background: var(--c-white);
     width: min(440px, 92vw);
@@ -156,7 +325,6 @@
   .modal-overlay.is-open .modal-box {
     transform: translateY(0);
   }
-
   .modal-tab {
     font-family: var(--font-body);
     font-size: 0.65rem;

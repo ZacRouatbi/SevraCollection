@@ -6,15 +6,17 @@
 {% block content %}
 
 {# ═══ HERO ════════════════════════ #}
-<section class="relative min-h-screen flex items-center overflow-hidden bg-shadow">
+<section class="relative min-h-screen flex items-center overflow-hidden">
 
   {# Background Video — crossfade loop #}
   <div class="absolute inset-0 z-0" id="video-wrap">
     <video id="vid-a" autoplay muted playsinline
+           poster="{{ asset('images/Heroposter.jpg') }}"
            class="absolute inset-0 w-full h-full object-cover grayscale-[10%] brightness-[0.8] transition-opacity duration-1000">
       <source src="{{ asset('videos/heroVideo.mp4') }}" type="video/mp4">
     </video>
     <video id="vid-b" muted playsinline
+           poster="{{ asset('images/Heroposter.jpg') }}"
            class="absolute inset-0 w-full h-full object-cover grayscale-[10%] brightness-[0.8] transition-opacity duration-1000 opacity-0">
       <source src="{{ asset('videos/heroVideo.mp4') }}" type="video/mp4">
     </video>
