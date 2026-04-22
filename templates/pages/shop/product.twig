@@ -1,0 +1,130 @@
+{# templates/pages/shop/product.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ product.name ?? 'Ensemble' }} — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center gap-2 mb-10" aria-label="Fil d'Ariane">
+    <a href="{{ path('home') }}"  class="footer-link" style="color:var(--c-mauve)">Accueil</a>
+    <span class="text-mauve text-xs">/</span>
+    <a href="{{ path('shop') }}"  class="footer-link" style="color:var(--c-mauve)">Collection</a>
+    <span class="text-mauve text-xs">/</span>
+    <span class="label" style="color:var(--c-shadow)">{{ product.name ?? slug }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+
+    {# ── Images ────────────────────────────────────────────────── #}
+    <div class="space-y-3">
+      {# Main image #}
+      <div class="aspect-[3/4] overflow-hidden bg-olive/5" id="main-image-wrap">
+        {% if product is not null and product.images is defined and product.images|length > 0 %}
+          <img src="{{ product.images[0] }}" alt="{{ product.name }}"
+               class="w-full h-full object-cover" id="main-image">
+        {% else %}
+          <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-olive/10 to-mauve/10">
+            <p class="font-display italic text-4xl text-olive/25">Photo</p>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Thumbnails #}
+      {% if product is not null and product.images is defined and product.images|length > 1 %}
+        <div class="flex gap-2">
+          {% for img in product.images %}
+            <button onclick="document.getElementById('main-image').src='{{ img }}'"
+                    class="w-20 aspect-[3/4] overflow-hidden border border-transparent hover:border-olive transition-colors">
+              <img src="{{ img }}" alt="Vue {{ loop.index }}" class="w-full h-full object-cover">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── Info + Add to Cart ───────────────────────────────────── #}
+    <div class="flex flex-col">
+      <span class="label mb-3">
+        {{ product.type is defined ? (product.type == 'pants' ? 'Ensemble Pantalon' : 'Ensemble Short') : 'Ensemble' }}
+      </span>
+      <h1 class="font-display italic text-4xl font-light text-shadow mb-2">
+        {{ product.name ?? 'Ensemble Laine' }}
+      </h1>
+      <p class="font-display italic text-2xl mb-6" style="color:var(--c-olive)">
+        {{ product.price is defined ? product.price ~ ' DT' : '—' }}
+      </p>
+      <span class="divider-olive mb-6"></span>
+
+      {# Description #}
+      <p class="text-shadow/65 font-light leading-relaxed mb-8 text-sm">
+        {{ product.description ?? 'Ensemble en laine pure — alliant chaleur, douceur et élégance. Disponible en plusieurs tailles.' }}
+      </p>
+
+      {# Add to cart form #}
+      <form method="POST" action="{{ path('cart_add') ?? '#' }}" class="space-y-6">
+        {% if product is not null %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+        {% endif %}
+        <input type="hidden" name="size" id="selected-size" value="">
+
+        {# Size selector #}
+        <div>
+          <p class="input-label mb-3">Taille</p>
+          <div class="size-selector flex gap-2 flex-wrap">
+            {% set sizes = product.sizes is defined ? product.sizes : ['XS','S','M','L','XL'] %}
+            {% for size in sizes %}
+              <button type="button"
+                      class="size-btn {% if product.stock is defined and product.stock[size] is defined and product.stock[size] == 0 %}out-of-stock{% endif %}"
+                      data-size="{{ size }}">
+                {{ size }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# Quantity #}
+        <div>
+          <p class="input-label mb-3">Quantité</p>
+          <div class="qty-stepper">
+            <button type="button" data-qty-dec>−</button>
+            <span>1</span>
+            <button type="button" data-qty-inc>+</button>
+          </div>
+          <input type="hidden" name="qty" id="qty-input" value="1">
+        </div>
+
+        <button type="submit" class="btn-primary w-full justify-center text-sm">
+          Ajouter au panier
+        </button>
+        <a href="{{ path('checkout') }}" class="btn-outline w-full justify-center text-center block text-sm">
+          Acheter maintenant
+        </a>
+      </form>
+
+      {# Care info #}
+      <div class="mt-8 pt-6 border-t border-olive/15 space-y-2">
+        <p class="text-xs font-body font-light text-shadow/50 flex items-center gap-2">
+          <span>◈</span> Laine pure — laver à 30°C à la main
+        </p>
+        <p class="text-xs font-body font-light text-shadow/50 flex items-center gap-2">
+          <span>◇</span> Livraison partout en Tunisie
+        </p>
+        <p class="text-xs font-body font-light text-shadow/50 flex items-center gap-2">
+          <span>○</span> Retour sous 7 jours
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts_extra %}
+<script>
+  // Sync qty stepper value to hidden input
+  document.addEventListener('qty:change', e => {
+    document.getElementById('qty-input').value = e.detail.qty;
+  });
+</script>
+{% endblock %}
+{% endblock %}

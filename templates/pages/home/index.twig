@@ -1,0 +1,239 @@
+{# templates/pages/home/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Sevra Collection — Ensembles en laine{% endblock %}
+
+{% block content %}
+
+{# ═══ HERO ════════════════════════ #}
+<section class="relative min-h-screen flex items-center overflow-hidden bg-shadow">
+
+  {# Background Video — crossfade loop #}
+  <div class="absolute inset-0 z-0" id="video-wrap">
+    <video id="vid-a" autoplay muted playsinline
+           class="absolute inset-0 w-full h-full object-cover grayscale-[10%] brightness-[0.8] transition-opacity duration-1000">
+      <source src="{{ asset('videos/heroVideo.mp4') }}" type="video/mp4">
+    </video>
+    <video id="vid-b" muted playsinline
+           class="absolute inset-0 w-full h-full object-cover grayscale-[10%] brightness-[0.8] transition-opacity duration-1000 opacity-0">
+      <source src="{{ asset('videos/heroVideo.mp4') }}" type="video/mp4">
+    </video>
+  </div>
+
+  <div class="relative z-10 max-w-full px-6 lg:pr-20 w-full flex justify-end">
+    <div class="relative max-w-xl ml-auto">
+      <div class="relative z-20 p-10 lg:p-16 opacity-0 text-left flex flex-col items-start" id="hero-text">
+        <span class="label mb-6 block tracking-[0.2em]" style="color:var(--c-snow)">Nouvelle Collection · 2026</span>
+
+        <h2 class="text-hero mb-6 text-white leading-[1.1] drop-shadow-lg">
+          Chaleur<br>
+          <em class="font-serif italic font-light">sans<br>compromis.</em>
+        </h2>
+
+        <div class="w-12 h-[1px] mb-8" style="background:rgba(253,250,247,0.4)"></div>
+
+        <p class="font-light text-lg leading-relaxed max-w-sm mb-10" style="color:var(--c-snow)">
+          Ensembles en lin pur, pensés pour la femme qui refuse de choisir entre élégance et confort.
+        </p>
+
+        <div class="flex flex-wrap gap-6 mt-4 justify-start">
+          <a href="{{ path('shop') }}"
+             class="btn-primary !bg-shadow !text-snow border-none hover:!bg-olive hover:!text-snow transition-all duration-500 ">
+            Découvrir la collection
+          </a>
+          <a href="{{ path('gallery') }}"
+             class="btn-outline !text-white !border-white/30 hover:!bg-white/10 hover:!border-white transition-all">
+            Nouveautés
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ═══ MARQUEE STRIP ════════════════════════════════════════════ #}
+<div class="overflow-hidden border-y border-olive/15 py-4 mb-16 bg-white/40">
+  <div class="flex gap-12 whitespace-nowrap" style="animation: marquee 18s linear infinite">
+    {% for _ in 1..6 %}
+      <span class="label text-olive/70">Ensemble Pantalon</span>
+      <span class="text-olive/30 text-xs">·</span>
+      <span class="label text-olive/70">Ensemble Short</span>
+      <span class="text-olive/30 text-xs">·</span>
+      <span class="label text-olive/70">Laine Pure</span>
+      <span class="text-olive/30 text-xs">·</span>
+      <span class="label text-olive/70">Fait avec soin</span>
+      <span class="text-olive/30 text-xs">·</span>
+    {% endfor %}
+  </div>
+</div>
+
+{# ═══ FEATURED PRODUCTS ════════════════════════════════════════ #}
+<section class="max-w-7xl mx-auto px-6 lg:px-10 py-8 md:pb-32">
+  <div class="flex items-end justify-between mb-10">
+    <div>
+      <span class="label mb-2 block">Sélection</span>
+      <h2 class="text-display">Pièces phares</h2>
+    </div>
+    <a href="{{ path('shop') }}" class="btn-ghost flex items-center gap-2 nav-link" style="color:var(--c-olive)">
+      Tout voir
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+  </div>
+
+  {% if featured_products is defined and featured_products is not empty %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+      {% for product in featured_products %}
+        <div class="flex flex-col">
+          {% include 'components/product/product_card.twig' with { product: product } %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 items-stretch">
+      {% for i in 1..4 %}
+        <div class="flex flex-col h-full">
+          <article class="product-card animate-pulse flex flex-col h-full">
+            <div class="relative w-full mb-4 shrink-0 aspect-[3/4]" style="background:rgba(118,128,100,0.10)"></div>
+            <div class="product-card__body flex flex-col flex-grow">
+              <div class="flex-grow">
+                <div class="h-4 rounded w-3/4 mb-2" style="background:rgba(118,128,100,0.10)">&#8203;</div>
+              </div>
+              <div class="mt-auto pb-1">
+                <div class="h-4 rounded w-1/4" style="background:rgba(118,128,100,0.05)">&#8203;</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{# ═══ WHY SEVRA ════════════════════════════════════════════════ #}
+<section class="py-20" style="background:var(--c-olive)">
+  <div class="max-w-5xl mx-auto px-6 lg:px-10 text-center">
+    <span class="label mb-4 block" style="color:var(--c-snow)">L'essence Sevra</span>
+    <h2 class="text-display mb-12" style="color:var(--c-snow)">
+      Pourquoi choisir Sevra ?
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% set pillars = [
+        { icon: '◈', title: 'Laine Pure', desc: "Matière noble, douce et respirante — sélectionnée pour sa qualité exceptionnelle." },
+        { icon: '◇', title: 'Coupe Précise', desc: "Chaque set est pensé pour valoriser la silhouette, pantalon ou short." },
+        { icon: '○', title: 'Édition Limitée', desc: "Des collections restreintes pour garantir l'exclusivité de chaque pièce." }
+      ] %}
+      {% for p in pillars %}
+        <div class="text-center">
+          <p class="text-3xl mb-4" style="color:var(--c-snow)">{{ p.icon }}</p>
+          <p class="font-display italic text-xl mb-2" style="color:var(--c-snow)">{{ p.title }}</p>
+          <p class="text-sm font-light leading-relaxed" style="color:rgba(253,250,247,0.65)">{{ p.desc }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ═══ NEW ARRIVALS TEASER ══════════════════════════════════════ #}
+<section class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
+  <div class="flex items-end justify-between mb-10">
+    <div>
+      <span class="label mb-2 block">Nouveautés</span>
+      <h2 class="text-display">Dernières arrivées</h2>
+    </div>
+    <a href="{{ path('gallery') }}" class="btn-ghost flex items-center gap-2 nav-link" style="color:var(--c-olive)">
+      Galerie complète
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {% for i in 1..3 %}
+      <div class="gallery-item relative group overflow-hidden">
+        <div class="aspect-[3/4] flex items-center justify-center"
+             style="background: linear-gradient(135deg, rgba(118,128,100,0.12), rgba(148,132,155,0.08))">
+          <p class="font-display italic text-2xl" style="color:rgba(118,128,100,0.25)">Photo {{ i }}</p>
+        </div>
+        <div class="absolute inset-0 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+             style="background: linear-gradient(to top, rgba(32,32,48,0.6), transparent)">
+          <p class="font-display italic text-xl" style="color:var(--c-snow)">Nouvelle pièce</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<style>
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+
+{% block scripts_extra %}
+<script>
+  // Hero text fade in
+  document.getElementById('hero-text')?.animate(
+    [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'translateY(0)' }],
+    { duration: 900, delay: 300, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' }
+  );
+
+  // Crossfade video loop
+  (function () {
+    const a = document.getElementById('vid-a');
+    const b = document.getElementById('vid-b');
+    const fadeDuration = 1500;
+    let fading = false;
+
+    function crossfade(from, to, onComplete) {
+      const start = performance.now();
+      function step(now) {
+        const p = Math.min((now - start) / fadeDuration, 1);
+        const e = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+        from.style.opacity = 1 - e;
+        to.style.opacity   = e;
+        if (p < 1) {
+          requestAnimationFrame(step);
+        } else {
+          from.pause();
+          from.style.opacity = '0';
+          to.style.opacity   = '1';
+          fading = false;
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function watchEnd(source, target, onComplete) {
+      source.addEventListener('timeupdate', function handler() {
+        if (!source.duration || fading) return;
+        if (source.currentTime >= source.duration - fadeDuration / 1000) {
+          fading = true;
+          source.removeEventListener('timeupdate', handler);
+          target.currentTime = 0;
+          target.play()
+            .then(() => crossfade(source, target, onComplete))
+            .catch(() => { fading = false; });
+        }
+      });
+    }
+
+    function loop(active, standby) {
+      watchEnd(active, standby, () => loop(standby, active));
+    }
+
+    b.preload = 'auto';
+    // Start watching once a is playing
+    a.addEventListener('playing', () => loop(a, b), { once: true });
+  })();
+</script>
+{% endblock %}
+
+<script>window.SEVRA_PAGE = 'home';</script>
+
+{% endblock %}

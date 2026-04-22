@@ -1,0 +1,245 @@
+{# templates/pages/about/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}À propos — Sevra Collection{% endblock %}
+
+{% block content %}
+
+{# ═══ OPENING IMAGE — full bleed, near full height ════════════ #}
+<div class="relative overflow-hidden about-reveal" style="height: 100vh; min-height: 560px;">
+  <img
+    src="{{ asset('images/about-cover.jpg') }}"
+    alt="Sevra Collection"
+    class="w-full h-full object-cover"
+    id="about-cover"
+    style="filter: brightness(0.88) saturate(0.92);">
+
+  {# Gradient veil #}
+  <div class="absolute inset-0"
+       style="background: linear-gradient(to bottom, transparent 50%, rgba(242,229,217,0.55) 100%)"></div>
+
+  {# Bottom left headline #}
+  <div class="absolute bottom-0 left-0 px-8 lg:px-16 pb-14">
+    <span class="label block mb-4" style="color:rgba(32,32,48,0.55)">À propos</span>
+    <h1 class="font-display italic font-light leading-[1.0]"
+        style="font-size: clamp(3rem, 9vw, 8rem); color:var(--c-shadow)">
+      Sevra.
+    </h1>
+  </div>
+</div>
+
+{# ═══ OPENING STATEMENT ═══════════════════════════════════════ #}
+<section class="max-w-6xl mx-auto px-8 lg:px-16 py-24 about-reveal">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+    <div class="lg:col-span-7">
+      <h2 class="font-display italic font-light leading-[1.1]"
+          style="font-size: clamp(2rem, 4.5vw, 3.5rem); color:var(--c-shadow)">
+        La chaleur comme<br>philosophie de vie.
+      </h2>
+    </div>
+    <div class="lg:col-span-5 lg:pb-2">
+      <p class="text-sm font-light leading-relaxed" style="color:rgba(32,32,48,0.6)">
+        Sevra Collection est née d'une conviction simple — que la laine pure, bien coupée, peut être à la fois le vêtement le plus confortable et le plus élégant qu'une femme puisse porter.
+      </p>
+    </div>
+  </div>
+  <div class="mt-14 border-t" style="border-color:rgba(118,128,100,0.2)"></div>
+</section>
+
+{# ═══ FOUNDER SECTION ═════════════════════════════════════════ #}
+<section class="max-w-6xl mx-auto px-8 lg:px-16 pb-24">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch">
+
+    {# Image — offset slightly lower #}
+    <div class="about-reveal lg:pr-8">
+      <div class="overflow-hidden" style="aspect-ratio: 3/4;">
+        <img
+          src="{{ asset('images/founder.jpg') }}"
+          alt="Fondatrice Sevra"
+          class="w-full h-full object-cover about-img"
+          style="filter: saturate(0.88);">
+      </div>
+    </div>
+
+    {# Text — vertically centered #}
+    <div class="flex flex-col justify-center about-reveal lg:pl-8 pt-12 lg:pt-0">
+      <span class="label mb-6 block" style="color:var(--c-olive)">La fondatrice</span>
+      <h3 class="font-display italic font-light text-4xl leading-tight mb-6"
+          style="color:var(--c-shadow)">
+        Une femme,<br>une vision,<br>une matière.
+      </h3>
+      <div class="w-10 h-[1px] mb-6" style="background:var(--c-olive)"></div>
+      <p class="text-sm font-light leading-relaxed mb-5" style="color:rgba(32,32,48,0.65)">
+        Sevra est née de l'insatisfaction devant un marché qui forçait le choix entre le confort et l'élégance. Pourquoi la chaleur devrait-elle être laide ? Pourquoi l'élégance devrait-elle être inconfortable ?
+      </p>
+      <p class="text-sm font-light leading-relaxed" style="color:rgba(32,32,48,0.65)">
+        La réponse était dans la matière elle-même — la laine pure, sélectionnée avec soin, taillée avec précision. Deux silhouettes seulement : le pantalon et le short. Faites à la perfection, ou pas du tout.
+      </p>
+    </div>
+  </div>
+</section>
+
+{# ═══ FULL BLEED IMAGE — atmosphere ══════════════════════════ #}
+<div class="about-reveal overflow-hidden mb-1" style="height: 75vh; min-height: 400px;">
+  <img
+    src="{{ asset('images/about-atmosphere.png') }}"
+    alt="Sevra — matière et lumière"
+    class="w-full h-full object-cover about-img"
+    style="filter: brightness(0.9) saturate(0.9);">
+</div>
+
+{# ═══ PULL QUOTE ══════════════════════════════════════════════ #}
+<section class="about-reveal py-28" style="background:var(--c-olive)">
+  <div class="max-w-3xl mx-auto px-8 text-center">
+    <div class="w-8 h-[1px] mx-auto mb-10" style="background:var(--c-olive)"></div>
+    <p class="font-display italic font-light leading-[1.15]"
+       style="font-size: clamp(1.6rem, 4vw, 3rem); color:var(--c-snow)">
+      « Chaque ensemble Sevra est conçu pour une femme qui sait exactement qui elle est — et qui refuse de choisir. »
+    </p>
+    <div class="w-8 h-[1px] mx-auto mt-10" style="background:var(--c-olive)"></div>
+  </div>
+</section>
+
+{# ═══ TWO COLUMN — matière & fabrication ═════════════════════ #}
+<section class="max-w-6xl mx-auto px-8 lg:px-16 py-24">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+
+    <div class="about-reveal">
+      <div class="overflow-hidden mb-8" style="aspect-ratio: 4/3;">
+        <img
+          src="{{ asset('images/about-matiere.jpg') }}"
+          alt="Laine Sevra"
+          class="w-full h-full object-cover about-img"
+          style="filter: saturate(0.85);">
+      </div>
+      <span class="label mb-3 block" style="color:var(--c-olive)">La matière</span>
+      <h3 class="font-display italic text-2xl font-light mb-4" style="color:var(--c-shadow)">
+        Laine pure, sélection rigoureuse.
+      </h3>
+      <p class="text-sm font-light leading-relaxed" style="color:rgba(32,32,48,0.6)">
+        Chaque lot de laine est choisi à la main — pour sa douceur, son poids, sa tenue. Nous ne travaillons qu'avec des fournisseurs dont nous connaissons les pratiques. La laine de Sevra est traçable, durable, et conçue pour durer des années, pas des saisons.
+      </p>
+    </div>
+
+    <div class="about-reveal lg:mt-16">
+      <div class="overflow-hidden mb-8" style="aspect-ratio: 4/3;">
+        <img
+          src="{{ asset('images/about-fabrication.jpg') }}"
+          alt="Fabrication Sevra"
+          class="w-full h-full object-cover about-img"
+          style="filter: saturate(0.85);">
+      </div>
+      <span class="label mb-3 block" style="color:var(--c-olive)">La fabrication</span>
+      <h3 class="font-display italic text-2xl font-light mb-4" style="color:var(--c-shadow)">
+        Deux silhouettes. Faites parfaitement.
+      </h3>
+      <p class="text-sm font-light leading-relaxed" style="color:rgba(32,32,48,0.6)">
+        Nous ne croyons pas à la prolifération de modèles. Sevra propose deux coupes — pantalon et short — parce que la perfection demande du temps. Chaque couture, chaque ourlet est vérifié. Ce que vous recevez n'est pas un produit de série : c'est une pièce.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+{# ═══ WIDE IMAGE — second atmosphere ═════════════════════════ #}
+<div class="about-reveal overflow-hidden mb-1" style="height: 65vh; min-height: 360px;">
+  <img
+    src="{{ asset('images/about-wide.jpg') }}"
+    alt="Sevra Collection"
+    class="w-full h-full object-cover object-top about-img"
+    style="object-position: center 30% top 40% ; filter: brightness(0.88) saturate(0.9);">
+</div>
+
+{# ═══ VALUES ROW ══════════════════════════════════════════════ #}
+<section class="max-w-6xl mx-auto px-8 lg:px-16 py-24 about-reveal">
+  <span class="label mb-10 block" style="color:var(--c-olive)">Nos valeurs</span>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x"
+       style="border-color:rgba(118,128,100,0.2); --tw-divide-opacity:1">
+
+    {% set values = [
+      { num: '01', title: 'Qualité sans compromis',
+        desc: "Nous ne sortons pas une pièce tant qu'elle n'est pas exactement ce qu'elle doit être. Pas de délais, pas de pression de saison." },
+      { num: '02', title: 'Éditions limitées',
+        desc: "Chaque collection est produite en quantité restreinte. L'exclusivité n'est pas un argument marketing — c'est notre façon de travailler." },
+      { num: '03', title: 'Chaleur durable',
+        desc: "La laine que nous utilisons est pensée pour traverser les années. Sevra n'est pas de la mode jetable. C'est un investissement dans votre garde-robe." },
+    ] %}
+
+    {% for v in values %}
+      <div class="py-8
+        {% if loop.first %}md:pr-10 md:mt-0
+        {% elseif loop.index == 2 %}md:px-10 md:mt-12
+        {% else %}md:pl-10 md:mt-24{% endif %}">
+        <p class="font-display italic text-5xl font-light mb-6"
+           style="color:rgba(118,128,100,0.25)">{{ v.num }}</p>
+        <h4 class="font-display italic text-xl font-light mb-3" style="color:var(--c-shadow)">
+          {{ v.title }}
+        </h4>
+        <p class="text-sm font-light leading-relaxed" style="color:rgba(32,32,48,0.55)">
+          {{ v.desc }}
+        </p>
+      </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+{# ═══ CLOSING CTA ═════════════════════════════════════════════ #}
+<section class="about-reveal border-t" style="border-color:rgba(118,128,100,0.2)">
+  <div class="max-w-6xl mx-auto px-8 lg:px-16 py-24 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
+    <div>
+      <span class="label mb-4 block" style="color:var(--c-olive)">La collection</span>
+      <h2 class="font-display italic font-light leading-[1.05]"
+          style="font-size: clamp(2rem, 5vw, 4rem); color:var(--c-shadow)">
+        Découvrez les pièces<br>qui portent cette vision.
+      </h2>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4 shrink-0">
+      <a href="{{ path('shop') }}" class="btn-primary">La collection</a>
+      <a href="{{ path('editorial') }}" class="btn-outline">Éditoriaux</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  // Parallax on cover
+  const cover = document.getElementById('about-cover');
+  if (cover) {
+    window.addEventListener('scroll', () => {
+      cover.style.transform = `translateY(${window.scrollY * 0.22}px)`;
+    }, { passive: true });
+  }
+
+  // Subtle scale on all editorial images on scroll
+  const imgs = document.querySelectorAll('.about-img');
+  window.addEventListener('scroll', () => {
+    imgs.forEach(img => {
+      const rect = img.closest('div').getBoundingClientRect();
+      const center = rect.top + rect.height / 2 - window.innerHeight / 2;
+      const scale = 1 + Math.abs(center) * 0.00004;
+      img.style.transform = `scale(${Math.min(scale, 1.06)})`;
+    });
+  }, { passive: true });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.07 });
+
+  document.querySelectorAll('.about-reveal').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(28px)';
+    el.style.transition = `opacity 1s cubic-bezier(0.4,0,0.2,1) ${i * 0.04}s, transform 1s cubic-bezier(0.4,0,0.2,1) ${i * 0.04}s`;
+    observer.observe(el);
+  });
+</script>
+{% endblock %}

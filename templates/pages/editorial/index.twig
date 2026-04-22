@@ -1,0 +1,185 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Éditoriaux — Sevra Collection{% endblock %}
+
+{% block content %}
+
+{# ═══ OPENING STATEMENT ══════════════════════════════════════════ #}
+<section class="max-w-7xl mx-auto px-6 lg:px-16 pt-20 pb-16">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+    <div>
+      <span class="label mb-5 block">Éditoriaux</span>
+      <h1 class="font-display italic font-light leading-[1.05]"
+          style="font-size: clamp(3rem, 7vw, 6rem); color:var(--c-shadow)">
+        Des histoires<br>de matière.
+      </h1>
+    </div>
+    <div class="flex items-end lg:justify-end">
+      <p class="text-sm font-light leading-relaxed max-w-xs" style="color:rgba(32,32,48,0.5)">
+        Chaque éditorial est une invitation — à ressentir la lin, à voir la lumière sur le tissu, à habiter un instant.
+      </p>
+    </div>
+  </div>
+  <div class="mt-10 border-t" style="border-color:rgba(118,128,100,0.2)"></div>
+</section>
+
+{# ═══ EDITORIAL GRID ══════════════════════════════════════════════ #}
+
+{% if editorials is not empty %}
+
+  {# ── First editorial: full bleed hero ─────────────────────── #}
+  {% set first = editorials[0] %}
+  <article class="editorial-hero mb-2 group cursor-pointer" onclick="window.location='{{ path('editorial_show', { slug: first.slug }) }}'">
+    <div class="relative overflow-hidden h-[60vh] md:h-[90vh] min-height-[520px]">
+      <img src="{{ first.cover_image }}" alt="{{ first.title }}"
+           class="w-full h-full object-cover  grayscale-[8%] transition-transform duration-[1.4s] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]">
+      <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(32,32,48,0.55) 0%, transparent 55%)"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-10 lg:p-16 flex items-end justify-between">
+        <div>
+          <p class="label mb-3" style="color:rgba(242,229,217,0.6)">{{ first.season ?? 'Collection' }}</p>
+          <h2 class="font-display italic font-light leading-tight mb-2"
+              style="font-size: clamp(2rem, 5vw, 4rem); color:var(--c-snow)">{{ first.title }}</h2>
+          <p class="text-sm font-light" style="color:rgba(242,229,217,0.55)">{{ first.subtitle ?? '' }}</p>
+        </div>
+        <a href="{{ path('editorial_show', { slug: first.slug }) }}"
+           class="hidden lg:flex items-center gap-3 text-xs tracking-[0.2em] uppercase transition-all duration-300"
+           style="color:var(--c-snow)"
+           onclick="event.stopPropagation()">
+          Lire
+          <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="28" y2="0.5" stroke="currentColor"/></svg>
+        </a>
+      </div>
+    </div>
+  </article>
+
+  {# ── Remaining editorials: asymmetric grid ─────────────────── #}
+  {% if editorials|length > 1 %}
+    <div class="max-w-7xl mx-auto px-6 lg:px-16 py-2">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+        {% for editorial in editorials|slice(1) %}
+          {% set loop_index = loop.index %}
+
+          <article class="group cursor-pointer {% if loop_index is odd %}md:col-span-7{% else %}md:col-span-5{% endif %}"
+                   onclick="window.location='{{ path('editorial_show', { slug: editorial.slug }) }}'">
+            <div class="relative overflow-hidden" style="aspect-ratio: {% if loop_index is odd %}4/3{% else %}3/4{% endif %}">
+              <img src="{{ editorial.cover_image }}" alt="{{ editorial.title }}"
+                   class="w-full h-full object-cover grayscale-[8%] transition-transform duration-[1.4s] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.04]">
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                   style="background: rgba(32,32,48,0.18)"></div>
+            </div>
+            <div class="pt-5 pb-8">
+              <p class="label mb-2" style="color:var(--c-olive)">{{ editorial.season ?? 'Éditorial' }}</p>
+              <h2 class="font-display italic font-light text-2xl leading-tight mb-1" style="color:var(--c-shadow)">
+                {{ editorial.title }}
+              </h2>
+              <p class="text-xs font-light" style="color:rgba(32,32,48,0.45)">{{ editorial.subtitle ?? '' }}</p>
+            </div>
+          </article>
+
+          {% if loop_index is even and not loop.last %}
+            <div class="md:col-span-12 border-t my-2" style="border-color:rgba(118,128,100,0.12)"></div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+{% else %}
+
+  {# ═══ PLACEHOLDER LAYOUT (pre-API) ══════════════════════════ #}
+
+  <article class="mb-2">
+    <div class="relative overflow-hidden" style="height: 90vh; min-height: 520px;">
+      <img src="/images/Autumn.png" alt="La lumière du soir" class="w-full h-full object-cover grayscale-[8%]">
+      <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(32,32,48,0.5) 0%, transparent 55%)"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-10 lg:p-16 flex items-end justify-between">
+        <div>
+          <p class="label mb-3" style="color:rgba(242,229,217,0.5)">Automne · 2026</p>
+          <h2 class="font-display italic font-light leading-tight mb-2"
+              style="font-size: clamp(2rem, 5vw, 4rem); color:var(--c-snow)">
+            La lumière du soir
+          </h2>
+          <p class="text-sm font-light" style="color:rgba(242,229,217,0.45)">
+            Lin et lumière — une étude en douceur.
+          </p>
+        </div>
+        <span class="hidden lg:flex items-center gap-3 text-xs tracking-[0.2em] uppercase"
+              style="color:rgba(242,229,217,0.5)">
+          Lire
+          <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="28" y2="0.5" stroke="currentColor"/></svg>
+        </span>
+      </div>
+    </div>
+  </article>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-16 py-2">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+
+      {# Array sequence cleaned for syntax accuracy #}
+      {% set placeholders = [
+        { season: 'Hiver · 2026', title: 'Matins de Lin', sub: 'La chaleur avant tout.', wide: true, image: '/images/Winter.png' },
+        { season: 'Été · 2026', title: 'Le short en lin', sub: 'Légèreté et précision.', wide: false, image: '/images/Summer.png' },
+        { season: 'Printemps', title: 'Silhouettes claires', sub: 'Blanc, lin, lumière.', wide: false, image: '/images/Printemps.png' },
+        { season: 'Capsule', title: "Nuances d'olive (Aline)", sub: 'Une couleur, une posture.', wide: true, image: '/images/Capsule.png' }
+      ] %}
+
+      {% for p in placeholders %}
+        <article class="group {{ p.wide ? 'md:col-span-7' : 'md:col-span-5' }}">
+          <div class="relative overflow-hidden group cursor-pointer"
+               style="aspect-ratio: {{ p.wide ? '4/3' : '3/4' }};">
+            <img src="{{ p.image }}" alt="{{ p.title }}"
+                 class="w-full h-full object-cover grayscale-[8%] transition-transform duration-[1.4s] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.04]">
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                 style="background: rgba(32,32,48,0.18)"></div>
+          </div>
+          <div class="pt-5 pb-8">
+            <p class="label mb-2" style="color:var(--c-olive)">{{ p.season }}</p>
+            <h2 class="font-display italic font-light text-2xl leading-tight mb-1" style="color:var(--c-shadow)">
+              {{ p.title }}
+            </h2>
+            <p class="text-xs font-light" style="color:rgba(32,32,48,0.4)">{{ p.sub }}</p>
+          </div>
+        </article>
+
+        {% if loop.index is even and not loop.last %}
+          <div class="md:col-span-12 border-t my-2" style="border-color:rgba(118,128,100,0.12)"></div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+  </div>
+
+{% endif %}
+
+{# ═══ BOTTOM STATEMENT ════════════════════════════════════════════ #}
+<div class="max-w-7xl mx-auto px-6 lg:px-16 py-20 flex flex-col md:flex-row items-center justify-between gap-8
+            border-t mt-4" style="border-color:rgba(118,128,100,0.2)">
+  <p class="font-display italic font-light text-2xl md:text-3xl max-w-sm leading-snug"
+     style="color:var(--c-shadow)">
+    Chaque pièce raconte<br>quelque chose.
+  </p>
+  <a href="{{ path('shop') }}" class="btn-primary shrink-0">Voir la collection</a>
+</div>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('article').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = `opacity 0.8s cubic-bezier(0.4,0,0.2,1) ${i * 0.08}s, transform 0.8s cubic-bezier(0.4,0,0.2,1) ${i * 0.08}s`;
+    observer.observe(el);
+  });
+</script>
+{% endblock %}

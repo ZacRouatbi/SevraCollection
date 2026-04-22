@@ -1,0 +1,67 @@
+{# templates/pages/gallery/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveautés — Sevra Collection{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
+
+  {# ── Header ─────────────────────────────────────────────────── #}
+  <div class="max-w-lg mb-14">
+    <span class="label mb-3 block">Arrivals</span>
+    <h1 class="text-display mb-4">Nouvelles<br><em>arrivées.</em></h1>
+    <p class="text-shadow/55 font-light leading-relaxed">
+      Les dernières pièces de la collection — en avant-première, avant qu'elles ne soient épuisées.
+    </p>
+  </div>
+
+  {# ── Gallery Grid ───────────────────────────────────────────── #}
+  {% if arrivals is not empty %}
+    <div class="gallery-grid">
+      {% for item in arrivals %}
+        <a href="{{ path('product_detail', { slug: item.slug }) }}" class="gallery-item">
+          <img src="{{ item.images[0] ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}">
+          <div class="gallery-item__overlay">
+            <div>
+              <p class="label mb-1" style="color:rgba(242,229,217,0.65)">
+                {{ item.type == 'pants' ? 'Pantalon' : 'Short' }}
+              </p>
+              <p class="font-display italic text-2xl" style="color:var(--c-linen)">{{ item.name }}</p>
+              <p class="text-sm font-light mt-1" style="color:rgba(242,229,217,0.7)">{{ item.price }} DT</p>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+{% else %}
+  {# ── Placeholder Grid (remove when API is wired) ──────────── #}
+  <div class="gallery-grid">
+    {% set placeholder_types = ['Pantalon', 'Short', 'Pantalon', 'Short', 'Pantalon', 'Short'] %}
+    {% for i in 1..6 %}
+      <div class="gallery-item cursor-default">
+        <div class="aspect-[3/4] flex items-center justify-center"
+             style="background: linear-gradient(135deg,
+               {% if loop.index is odd %}rgba(118,128,100,0.12){% else %}rgba(148,132,155,0.12){% endif %},
+               {% if loop.index is odd %}rgba(118,128,100,0.04){% else %}rgba(148,132,155,0.04){% endif %})">
+          <p class="font-display italic text-2xl" style="color:rgba(118,128,100,0.25)">
+            {{ placeholder_types[loop.index0] }}
+          </p>
+        </div>
+        <div class="gallery-item__overlay">
+          <div>
+            <p class="label mb-1" style="color:rgba(242,229,217,0.65)">{{ placeholder_types[loop.index0] }}</p>
+            <p class="font-display italic text-2xl" style="color:var(--c-linen)">Ensemble {{ i }}</p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  {# ── CTA ────────────────────────────────────────────────────── #}
+  <div class="text-center mt-16">
+    <a href="{{ path('shop') }}" class="btn-primary">Voir toute la collection</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{# templates/components/product/product_card.twig #}
+
+<article class="product-card flex flex-col h-full" data-product-type="{{ product.type ?? '' }}">
+  <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}" class="block overflow-hidden">
+    <div class="overflow-hidden relative aspect-[3/4]"> {# Forced Aspect Ratio #}
+      <img
+        src="{{ product.images[0] ?? '/images/placeholder.jpg' }}"
+        alt="{{ product.name ?? 'Ensemble Sevra' }}"
+        class="product-card__img w-full h-full object-cover"
+        loading="lazy">
+
+      {# Type badge #}
+      {% if product.type is defined %}
+        <span class="absolute top-3 left-3 label bg-linen px-2 py-1"
+              style="background:var(--c-linen);color:var(--c-olive-dark)">
+          {{ product.type == 'pants' ? 'Pantalon' : 'Short' }}
+        </span>
+      {% endif %}
+
+      {# Quick-add overlay on hover #}
+      <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-shadow/30 to-transparent">
+        <button
+          class="btn-primary text-xs py-2.5 px-5"
+          data-quick-add="{{ product.id ?? '' }}"
+          onclick="event.preventDefault(); event.stopPropagation();">
+          Ajouter au panier
+        </button>
+      </div>
+    </div>
+  </a>
+
+  {# The Body now grows to fill the remaining height #}
+  <div class="product-card__body flex flex-col flex-grow pt-4">
+    <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}" class="hover:opacity-70 transition-opacity flex-grow">
+      <h3 class="product-card__name">{{ product.name ?? 'Ensemble Laine' }}</h3>
+    </a>
+    <p class="product-card__price mt-auto pt-1">
+      {{ product.price is defined ? product.price ~ ' DT' : '— DT' }}
+    </p>
+  </div>
+</article>

@@ -1,0 +1,180 @@
+{# templates/components/modal/auth_modal.twig #}
+<div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Authentification">
+  <div class="modal-box">
+
+    {# ── Close ─────────────────────────────────────────────── #}
+    <button id="modal-close" class="absolute top-5 right-5 btn-ghost" aria-label="Fermer"
+            style="color:rgba(32,32,48,0.35)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    {# ── Brand mark ────────────────────────────────────────── #}
+    <p class="font-display italic text-center mb-8 tracking-widest"
+       style="font-size:0.7rem; color:var(--c-olive); letter-spacing:0.3em">SEVRA</p>
+
+    {# ── Tabs ──────────────────────────────────────────────── #}
+    <div class="flex justify-center gap-8 mb-8" style="border-bottom: 1px solid rgba(118,128,100,0.15)">
+      <button class="modal-tab active" data-tab="login">Connexion</button>
+      <button class="modal-tab" data-tab="register">Créer un compte</button>
+      <button class="modal-tab" data-tab="reset">Mot de passe</button>
+    </div>
+
+    {# ═══ LOGIN ════════════════════════════════════════════════ #}
+    <div data-panel="login" class="modal-panel">
+      <p class="font-display italic font-light text-center mb-8"
+         style="font-size:1.75rem; color:var(--c-shadow)">Bon retour.</p>
+
+      <form method="POST" action="{{ path('login_check') }}" class="space-y-5">
+        <div>
+          <label class="input-label" for="login-email">E-mail</label>
+          <input class="input-field" type="email" id="login-email" name="email"
+                 autocomplete="email" required placeholder="votre@email.com">
+        </div>
+        <div>
+          <label class="input-label" for="login-password">Mot de passe</label>
+          <input class="input-field" type="password" id="login-password" name="password"
+                 autocomplete="current-password" required placeholder="••••••••">
+        </div>
+        <div class="flex justify-end -mt-2">
+          <button type="button"
+                  style="font-size:0.7rem; color:var(--c-mauve); font-family:var(--font-body); background:none; border:none; cursor:pointer;"
+                  onmouseover="this.style.color='var(--c-olive)'"
+                  onmouseout="this.style.color='var(--c-mauve)'"
+                  onclick="document.querySelector('[data-tab=reset]').click()">
+            Mot de passe oublié ?
+          </button>
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center">
+          Se connecter
+        </button>
+      </form>
+
+      <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
+        Pas encore de compte ?
+        <button style="color:var(--c-olive); background:none; border:none; cursor:pointer; font-size:0.72rem; font-family:var(--font-body);"
+                onclick="document.querySelector('[data-tab=register]').click()">
+          S'inscrire
+        </button>
+      </p>
+    </div>
+
+    {# ═══ REGISTER ═════════════════════════════════════════════ #}
+    <div data-panel="register" class="modal-panel hidden">
+      <p class="font-display italic font-light text-center mb-8"
+         style="font-size:1.75rem; color:var(--c-shadow)">Rejoindre Sevra.</p>
+
+      <form method="POST" action="{{ path('register') }}" class="space-y-5">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="input-label" for="reg-firstname">Prénom</label>
+            <input class="input-field" type="text" id="reg-firstname" name="first_name"
+                   required autocomplete="given-name" placeholder="Yasmine">
+          </div>
+          <div>
+            <label class="input-label" for="reg-lastname">Nom</label>
+            <input class="input-field" type="text" id="reg-lastname" name="last_name"
+                   required autocomplete="family-name" placeholder="Aziz">
+          </div>
+        </div>
+        <div>
+          <label class="input-label" for="reg-email">E-mail</label>
+          <input class="input-field" type="email" id="reg-email" name="email"
+                 required autocomplete="email" placeholder="votre@email.com">
+        </div>
+        <div>
+          <label class="input-label" for="reg-password">Mot de passe</label>
+          <input class="input-field" type="password" id="reg-password" name="password"
+                 required autocomplete="new-password" placeholder="Min. 8 caractères">
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center">
+          Créer mon compte
+        </button>
+      </form>
+    </div>
+
+    {# ═══ RESET ════════════════════════════════════════════════ #}
+    <div data-panel="reset" class="modal-panel hidden">
+      <p class="font-display italic font-light text-center mb-3"
+         style="font-size:1.75rem; color:var(--c-shadow)">Réinitialiser.</p>
+      <p class="text-center font-light mb-8"
+         style="font-size:0.8rem; color:var(--c-mauve); max-width:260px; margin-left:auto; margin-right:auto; line-height:1.6">
+        Saisissez votre e-mail — nous vous enverrons un lien de réinitialisation.
+      </p>
+
+      <form method="POST" action="{{ path('reset_password') }}" class="space-y-5" id="reset-form">
+        <div>
+          <label class="input-label" for="reset-email">E-mail</label>
+          <input class="input-field" type="email" id="reset-email" name="email"
+                 required autocomplete="email" placeholder="votre@email.com">
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center">
+          Envoyer le lien
+        </button>
+      </form>
+
+      <div id="reset-success" class="hidden text-center py-6">
+        <p class="font-display italic text-xl mb-2" style="color:var(--c-olive)">Envoyé ✓</p>
+        <p style="font-size:0.8rem; color:var(--c-mauve)">Vérifiez votre boîte mail.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(242, 229, 217, 0.25);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .modal-overlay.is-open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal-box {
+    background: var(--c-white);
+    width: min(440px, 92vw);
+    padding: 2.5rem 2.75rem 3rem;
+    position: relative;
+    border-radius: 2px;
+    transform: translateY(16px);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 8px 48px rgba(118,128,100,0.12), 0 2px 12px rgba(32,32,48,0.06);
+  }
+  .modal-overlay.is-open .modal-box {
+    transform: translateY(0);
+  }
+
+  .modal-tab {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0 0 0.75rem;
+    border: none;
+    border-bottom: 1.5px solid transparent;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--c-mauve);
+  }
+  .modal-tab.active {
+    color: var(--c-shadow);
+    border-bottom-color: var(--c-olive);
+  }
+  .modal-tab:hover:not(.active) {
+    color: var(--c-shadow);
+  }
+</style>

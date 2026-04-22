@@ -1,0 +1,180 @@
+{# templates/pages/account/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon compte — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 lg:px-10 py-12">
+
+  <div class="mb-10">
+    <span class="label mb-2 block">Espace personnel</span>
+    <h1 class="text-display">
+      {% if user is not null %}
+        Bonjour, <em>{{ user.first_name ?? 'vous' }}.</em>
+      {% else %}
+        Mon compte
+      {% endif %}
+    </h1>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+    {# ── Sidebar nav ─────────────────────────────────────────── #}
+    <aside class="lg:col-span-1">
+      <nav class="space-y-1 sticky top-24">
+        {% set sections = [
+          { id: 'info',   label: 'Mes informations' },
+          { id: 'orders', label: 'Mes commandes' },
+          { id: 'logout', label: 'Déconnexion', url: path('logout') },
+        ] %}
+        {% for s in sections %}
+          {% if s.url is defined %}
+            <a href="{{ s.url }}"
+               class="flex items-center gap-3 px-4 py-3 text-sm font-body font-light
+                      text-shadow/50 hover:text-olive transition-colors">
+              <span>{{ s.label }}</span>
+            </a>
+          {% else %}
+            <button onclick="document.querySelectorAll('.account-section').forEach(el=>el.classList.add('hidden'));
+                             document.getElementById('section-{{ s.id }}').classList.remove('hidden');
+                             document.querySelectorAll('.acc-nav-btn').forEach(b=>b.classList.remove('text-olive','border-l-2','border-olive'));
+                             this.classList.add('text-olive','border-l-2','border-olive');"
+                    class="acc-nav-btn w-full text-left flex items-center gap-3 px-4 py-3 text-sm font-body font-light
+                           text-shadow/50 hover:text-olive transition-colors
+                           {% if loop.first %}text-olive border-l-2 border-olive{% endif %}">
+              {{ s.label }}
+            </button>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </aside>
+
+    {# ── Content ─────────────────────────────────────────────── #}
+    <div class="lg:col-span-2 space-y-8">
+
+      {# ─ SECTION: Informations ─────────────────────────────── #}
+      <section id="section-info" class="account-section">
+        <p class="font-display italic text-2xl mb-6">Mes informations</p>
+
+        <form method="POST" action="{{ path('account_update') }}" class="space-y-5">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="input-label" for="acc-first">Prénom</label>
+              <input class="input-field" type="text" id="acc-first" name="first_name"
+                     required value="{{ user.first_name ?? '' }}" placeholder="Prénom">
+            </div>
+            <div>
+              <label class="input-label" for="acc-last">Nom</label>
+              <input class="input-field" type="text" id="acc-last" name="last_name"
+                     required value="{{ user.last_name ?? '' }}" placeholder="Nom">
+            </div>
+          </div>
+
+          <div>
+            <label class="input-label" for="acc-email">E-mail</label>
+            <input class="input-field" type="email" id="acc-email" name="email"
+                   required value="{{ user.email ?? '' }}" placeholder="E-mail">
+          </div>
+
+          <div>
+            <label class="input-label" for="acc-phone">Téléphone</label>
+            <input class="input-field" type="tel" id="acc-phone" name="phone"
+                   value="{{ user.phone ?? '' }}" placeholder="+216 XX XXX XXX">
+          </div>
+
+          <div class="border-t border-olive/15 pt-5">
+            <p class="font-display italic text-lg mb-4 text-shadow">Adresse de livraison par défaut</p>
+            <div class="space-y-4">
+              <div>
+                <label class="input-label" for="acc-addr">Adresse</label>
+                <input class="input-field" type="text" id="acc-addr" name="address"
+                       value="{{ user.address ?? '' }}" placeholder="Adresse">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="input-label" for="acc-city">Ville</label>
+                  <input class="input-field" type="text" id="acc-city" name="city"
+                         value="{{ user.city ?? '' }}" placeholder="Tunis">
+                </div>
+                <div>
+                  <label class="input-label" for="acc-zip">Code postal</label>
+                  <input class="input-field" type="text" id="acc-zip" name="zip"
+                         value="{{ user.zip ?? '' }}" placeholder="1000">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-olive/15 pt-5">
+            <p class="font-display italic text-lg mb-4 text-shadow">Changer le mot de passe</p>
+            <div class="space-y-4">
+              <div>
+                <label class="input-label" for="acc-pw-current">Mot de passe actuel</label>
+                <input class="input-field" type="password" id="acc-pw-current" name="current_password"
+                       placeholder="••••••••">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="input-label" for="acc-pw-new">Nouveau</label>
+                  <input class="input-field" type="password" id="acc-pw-new" name="new_password"
+                         placeholder="••••••••">
+                </div>
+                <div>
+                  <label class="input-label" for="acc-pw-confirm">Confirmer</label>
+                  <input class="input-field" type="password" id="acc-pw-confirm" name="confirm_password"
+                         placeholder="••••••••">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">Enregistrer les modifications</button>
+        </form>
+      </section>
+
+      {# ─ SECTION: Orders ───────────────────────────────────── #}
+      <section id="section-orders" class="account-section hidden">
+        <p class="font-display italic text-2xl mb-6">Mes commandes</p>
+
+        {% if orders is not empty %}
+          <div class="space-y-4">
+            {% for order in orders %}
+              <div class="bg-white/60 p-5 border border-olive/10">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="font-display italic text-lg">Commande #{{ order.number }}</p>
+                    <p class="text-xs text-mauve font-light mt-0.5">
+                      {{ order.date is defined ? order.date|date('d/m/Y') : '' }}
+                    </p>
+                  </div>
+                  <span class="label px-3 py-1"
+                        style="background:var(--c-linen-deep);
+                               color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
+                    {{ order.status ?? 'En cours' }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-light text-shadow/60">
+                    {{ order.items_count ?? '?' }} article(s)
+                  </p>
+                  <p class="font-display italic text-lg" style="color:var(--c-olive)">
+                    {{ order.total }} DT
+                  </p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <p class="font-display italic text-2xl text-shadow/30 mb-2">Aucune commande</p>
+            <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
+            <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
+          </div>
+        {% endif %}
+      </section>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

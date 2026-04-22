@@ -1,0 +1,109 @@
+<footer class="site-footer mt-24" style="background:var(--c-olive)">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-10">
+
+    {# ── Top Row ────────────────────────────────────────────── #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-14">
+
+      {# 1. Brand / Logo #}
+      <div>
+        <a href="{{ path('home') }}" class="inline-block">
+    <img src="{{ asset('images/WhiteLogo.png') }}"
+         alt="Sevra Logo"
+         class="h-8 mb-6"
+         style="display: block; filter: none !important; opacity: 1 !important;">
+</a>
+        <p class="text-sm font-light leading-relaxed max-w-xs" style="color: rgba(242, 229, 217, 0.6)">
+          Ensembles en laine d'exception, conçus pour la femme moderne.<br>
+          Pantalons et shorts — chaleur sans compromis.
+        </p>
+      </div>
+
+      {# 2. Navigation #}
+      <div>
+        <p class="label mb-4 transition-colors duration-300 cursor-default"
+           style="color: #F2E5D9; opacity: 0.9; letter-spacing: 0.05em;"
+           onmouseover="this.style.color='#202030'"
+           onmouseout="this.style.color='#F2E5D9'">Navigation</p>
+        <ul class="space-y-2">
+          <li>
+            <a href="{{ path('account') }}"
+               class="transition-colors duration-300"
+               style="color: #F2E5D9;"
+               onmouseover="this.style.color='#202030'"
+               onmouseout="this.style.color='#F2E5D9'">Mon Compte</a>
+          </li>
+                    <li>
+            <a href="{{ path('about') }}"
+               class="transition-colors duration-300"
+               style="color: #F2E5D9;"
+               onmouseover="this.style.color='#202030'"
+               onmouseout="this.style.color='#F2E5D9'"> à propos</a>
+          </li>
+            <li>
+            <a href="{{ path('gallery') }}"
+               class="transition-colors duration-300"
+               style="color: #F2E5D9;"
+               onmouseover="this.style.color='#202030'"
+               onmouseout="this.style.color='#F2E5D9'">nouveautés</a>
+          </li>
+          <li>
+            <a href="{{ path('cart') }}"
+               class="transition-colors duration-300"
+               style="color: #F2E5D9;"
+               onmouseover="this.style.color='#202030'"
+               onmouseout="this.style.color='#F2E5D9'">Panier</a>
+          </li>
+        </ul>
+      </div>
+
+      {# 3. Newsletter #}
+      <div class="flex flex-col">
+        <p class="label mb-4 transition-colors duration-300 cursor-default"
+           style="color: #F2E5D9; opacity: 0.9; letter-spacing: 0.05em;"
+           onmouseover="this.style.color='#202030'"
+           onmouseout="this.style.color='#F2E5D9'">Newsletter</p>
+        <p class="text-sm font-light mb-4" style="color: rgba(242, 229, 217, 0.6)">Recevez nos nouveautés en avant-première.</p>
+        <div class="max-w-[280px]">
+          <form action="#" class="group flex items-center border-b py-2 transition-colors duration-300" style="border-color: rgba(242, 229, 217, 0.2)">
+             <input type="email"
+                    placeholder="votre@email.com"
+                    class="newsletter-input bg-transparent flex-1 outline-none text-sm"
+                    style="color: #F2E5D9" />
+             <button type="submit"
+                     class="ml-2 transition-colors duration-300"
+                     style="color: rgba(242, 229, 217, 0.6)"
+                     onmouseover="this.style.color='#202030'"
+                     onmouseout="this.style.color='rgba(242, 229, 217, 0.6)'">
+               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+               </svg>
+             </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    {# ── Bottom Row ───────────────────────────────────────────── #}
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: rgba(242, 229, 217, 0.1)">
+      <p class="text-xs tracking-widest uppercase" style="color: rgba(242, 229, 217, 0.3)">
+        © {{ "now"|date("Y") }} Sevra Collection. Tous droits réservés.
+      </p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
+           style="color: rgba(242, 229, 217, 0.5)"
+           onmouseover="this.style.color='#202030'"
+           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">Politique de confidentialité</a>
+        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
+           style="color: rgba(242, 229, 217, 0.5)"
+           onmouseover="this.style.color='#202030'"
+           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">CGV</a>
+        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
+           style="color: rgba(242, 229, 217, 0.5)"
+           onmouseover="this.style.color='#202030'"
+           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">Contact</a>
+      </div>
+    </div>
+
+  </div>
+</footer>

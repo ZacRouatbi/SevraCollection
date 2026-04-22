@@ -1,0 +1,100 @@
+{# templates/pages/cart/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Panier — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 lg:px-10 py-12">
+
+  <div class="mb-10">
+    <span class="label mb-2 block">Récapitulatif</span>
+    <h1 class="text-display">Votre panier</h1>
+  </div>
+
+  {% if cart_items is not empty %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+      {# ── Items list ──────────────────────────────────────────── #}
+      <div class="lg:col-span-2 space-y-0 divide-y divide-shadow/8">
+        {% for item in cart_items %}
+          <div class="cart-item">
+            <img src="{{ item.image ?? '/images/placeholder.jpg' }}"
+                 alt="{{ item.name }}" class="cart-item__img">
+            <div class="flex-1 min-w-0 py-1">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-display italic text-xl leading-tight mb-0.5">{{ item.name }}</p>
+                  <p class="label mb-3">
+                    {{ item.type == 'pants' ? 'Pantalon' : 'Short' }} · Taille {{ item.size }}
+                  </p>
+                </div>
+                <form method="POST" action="{{ path('cart_remove') ?? '#' }}">
+                  <input type="hidden" name="item_key" value="{{ item.key ?? '' }}">
+                  <button type="submit" class="btn-ghost text-mauve hover:text-shadow ml-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="qty-stepper">
+                  <button type="button" data-qty-dec>−</button>
+                  <span>{{ item.qty ?? 1 }}</span>
+                  <button type="button" data-qty-inc>+</button>
+                </div>
+                <p class="font-display italic text-xl" style="color:var(--c-olive)">
+                  {{ item.price }} DT
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {# ── Order Summary ────────────────────────────────────────── #}
+      <div class="lg:col-span-1">
+        <div class="bg-white/70 p-6 sticky top-24 border border-olive/20">
+          <p class="label mb-4">Résumé</p>
+
+          <div class="summary-row">
+            <span class="text-sm font-light">Sous-total</span>
+            <span class="font-body text-sm">{{ subtotal }} DT</span>
+          </div>
+          <div class="summary-row">
+            <span class="text-sm font-light">Livraison</span>
+            <span class="text-sm font-light text-mauve">Calculée à l'étape suivante</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span style="color:var(--c-olive)">{{ subtotal }} DT</span>
+          </div>
+
+          <a href="{{ path('checkout') }}" class="btn-primary w-full justify-center block text-center mt-6">
+            Passer la commande
+          </a>
+          <a href="{{ path('shop') }}" class="block text-center mt-4 text-xs nav-link">
+            ← Continuer mes achats
+          </a>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    {# Empty cart #}
+    <div class="flex flex-col items-center justify-center py-28 text-center">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1" class="mb-6" style="color:var(--c-mauve)">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <h2 class="font-display italic text-3xl text-shadow/40 mb-3">Votre panier est vide</h2>
+      <p class="text-sm text-mauve font-light mb-8">Parcourez notre collection pour trouver votre ensemble.</p>
+      <a href="{{ path('shop') }}" class="btn-primary">Découvrir la collection</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

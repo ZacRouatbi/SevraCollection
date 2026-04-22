@@ -1,11 +1,66 @@
-# yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
-
-# This file is the entry point to configure the routes of your app.
-# Methods with the #[Route] attribute are automatically imported.
-# See also https://symfony.com/doc/current/routing.html
-
-# To list all registered routes, run the following command:
-#   bin/console debug:router
-
 controllers:
-    resource: routing.controllers
+    resource: ../src/Controller/
+    type: attribute
+
+home:
+    path: /
+    controller: App\Controller\HomeController::index
+
+shop:
+    path: /shop
+    controller: App\Controller\ShopController::index
+
+gallery:
+    path: /gallery
+    controller: App\Controller\GalleryController::index
+
+cart:
+    path: /cart
+    controller: App\Controller\CartController::index
+
+account:
+    path: /account
+    controller: App\Controller\AccountController::index
+
+account_update:
+    path: /account/update
+    controller: App\Controller\AccountController::update
+login:
+    path: /login
+    controller: App\Controller\HomeController::index
+
+login_check:
+    path: /login-check
+    controller: App\Controller\HomeController::index
+
+register:
+    path: /register
+    controller: App\Controller\HomeController::index
+
+logout:
+    path: /logout
+    controller: App\Controller\HomeController::index
+
+reset_password:
+    path: /reset-password
+    controller: App\Controller\HomeController::index
+
+checkout:
+    path: /checkout
+    controller: App\Controller\CheckoutController::index
+
+checkout_confirm:
+    path: /checkout/confirm
+    controller: App\Controller\CheckoutController::confirm
+
+editorial:
+    path: /editorial
+    controller: App\Controller\EditorialController::index
+
+editorial_show:
+    path: /editorial/{slug}
+    controller: App\Controller\EditorialController::show
+
+about:
+    path: /about
+    controller: App\Controller\AboutController::index

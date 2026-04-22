@@ -1,0 +1,195 @@
+{# templates/components/header/header.twig #}
+
+{% set transparent_routes = ['home', 'about'] %}
+{% set current_route = app.request.attributes.get('_route') %}
+{% set is_transparent = current_route in transparent_routes %}
+
+<header class="site-header {% if is_transparent %}is-transparent{% endif %}"
+        {% if is_transparent %}data-transparent="true"{% endif %}>
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between gap-6">
+
+    {# ── Logo ──────────────────────────────────────────────── #}
+    <a href="{{ path('home') }}" class="shrink-0 flex items-center h-[50px]">
+      <img src="{{ asset('images/WhiteLogo.png') }}"
+           alt="Sevra Collection"
+           class="w-[140px] md:w-[200px] h-auto object-contain header-logo-white"
+           style="{% if not is_transparent %}display:none{% endif %}">
+      <img src="{{ asset('images/Sevra.png') }}"
+           alt="Sevra Collection"
+           class="w-[140px] md:w-[200px] h-auto object-contain header-logo-default"
+           style="{% if is_transparent %}display:none{% endif %}">
+    </a>
+
+    {# ── Desktop Nav ───────────────────────────────────────── #}
+    <nav class="hidden md:flex items-center gap-8" aria-label="Main navigation">
+      <a href="{{ path('shop') }}"
+         class="nav-link header-nav-link {% if current_route == 'shop' %}active{% endif %}">
+        Collections
+      </a>
+      <a href="{{ path('gallery') }}"
+         class="nav-link header-nav-link {% if current_route == 'gallery' %}active{% endif %}">
+        Nouveautés
+      </a>
+      <a href="{{ path('editorial') }}"
+         class="nav-link header-nav-link {% if current_route == 'editorial' %}active{% endif %}">
+        Éditorial
+      </a>
+      <a href="{{ path('about') }}"
+         class="nav-link header-nav-link {% if current_route == 'about' %}active{% endif %}">
+        À propos
+      </a>
+    </nav>
+
+    {# ── Actions ───────────────────────────────────────────── #}
+    <div class="flex items-center gap-4">
+
+      <button class="btn-ghost header-icon" data-search-open aria-label="Rechercher">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+
+      {% if app.user %}
+        <a href="{{ path('account') }}" class="btn-ghost header-icon" aria-label="Mon compte">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </a>
+      {% else %}
+        <button class="btn-ghost header-icon" data-modal="login" aria-label="Se connecter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+      {% endif %}
+
+      <button class="btn-ghost header-icon relative" data-cart-open aria-label="Panier">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span id="cart-count"
+              class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-olive text-cream text-[9px] flex items-center justify-center font-body font-medium hidden"
+              aria-label="articles dans le panier">0</span>
+      </button>
+
+      <button class="btn-ghost header-icon md:hidden" id="nav-toggle" aria-expanded="false" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {# ── Mobile Nav ──────────────────────────────────────────── #}
+  <nav id="nav-menu"
+       class="md:hidden overflow-hidden max-h-0 transition-all duration-300 [&.is-open]:max-h-64"
+       aria-label="Mobile navigation">
+    <div class="flex flex-col gap-1 px-6 py-4">
+      <a href="{{ path('shop') }}"       class="nav-link py-2 mobile-nav-link">Collections</a>
+      <a href="{{ path('gallery') }}"    class="nav-link py-2 mobile-nav-link">Nouveautés</a>
+      <a href="{{ path('editorial') }}" class="nav-link py-2 mobile-nav-link">Éditorial</a>
+      <a href="{{ path('about') }}"      class="nav-link py-2 mobile-nav-link">À propos</a>
+      {% if app.user %}
+        <a href="{{ path('account') }}"  class="nav-link py-2 mobile-nav-link">Mon compte</a>
+        <a href="{{ path('logout') }}"   class="nav-link py-2 mobile-nav-link">Déconnexion</a>
+      {% else %}
+        <button data-modal="login"    class="nav-link py-2 text-left btn-ghost mobile-nav-link">Se connecter</button>
+        <button data-modal="register" class="nav-link py-2 text-left btn-ghost mobile-nav-link">Créer un compte</button>
+      {% endif %}
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* ── Transparent state ─────────────────────────────────────── */
+  .site-header.is-transparent {
+    background: transparent;
+    border-bottom-color: transparent;
+    position: fixed;
+    width: 100%;
+  }
+  .site-header.is-transparent .header-nav-link {
+    color: rgba(253, 250, 247, 0.85);
+  }
+  .site-header.is-transparent .header-nav-link:hover {
+    color: #FDFAF7;
+  }
+  .site-header.is-transparent .header-icon {
+    color: rgba(253, 250, 247, 0.85);
+  }
+  .site-header.is-transparent .header-icon:hover {
+    color: #FDFAF7;
+    opacity: 1;
+  }
+
+  /* ── Solid state (scrolled OR menu open) ──────────────────── */
+  .site-header.is-solid {
+    background: rgba(250, 242, 235, 1);
+    border-bottom: 1px solid rgba(118, 128, 100, 0.15);
+  }
+  .site-header.is-solid .header-nav-link,
+  .site-header.is-solid .header-icon {
+    color: var(--c-shadow);
+  }
+
+  /* Mobile nav — always readable regardless of header state */
+  .mobile-nav-link {
+    color: var(--c-shadow) !important;
+  }
+  #nav-menu {
+    background: rgba(250, 242, 235, 0.98);
+  }
+
+  /* Smooth transition */
+  .site-header {
+    transition: background 0.4s ease, border-color 0.4s ease;
+  }
+</style>
+
+<script>
+  (function () {
+    const header    = document.querySelector('.site-header');
+    const navMenu   = document.getElementById('nav-menu');
+    const navToggle = document.getElementById('nav-toggle');
+    const logoWhite = header?.querySelector('.header-logo-white');
+    const logoDef   = header?.querySelector('.header-logo-default');
+
+    if (!header) return;
+
+    // ── Scroll: transparent <-> solid (desktop + mobile) ─────
+    if (header.dataset.transparent) {
+      window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY > 60;
+        header.classList.toggle('is-solid',       scrolled);
+        header.classList.toggle('is-transparent', !scrolled);
+        if (logoWhite && logoDef) {
+          logoWhite.style.display = scrolled ? 'none' : '';
+          logoDef.style.display   = scrolled ? ''     : 'none';
+        }
+      }, { passive: true });
+    }
+
+    // ── Hamburger: just open/close, nothing else ─────────────
+    let menuOpen = false;
+    navToggle?.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      navMenu?.classList.toggle('is-open', menuOpen);
+      navToggle.setAttribute('aria-expanded', String(menuOpen));
+    });
+
+    // ── Close menu on link tap ────────────────────────────────
+    navMenu?.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('click', () => {
+        menuOpen = false;
+        navMenu.classList.remove('is-open');
+        navToggle?.setAttribute('aria-expanded', 'false');
+      });
+    });
+  })();
+</script>

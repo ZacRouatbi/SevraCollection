@@ -1,0 +1,190 @@
+{# templates/pages/checkout/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Commander — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 lg:px-10 py-12">
+
+  <div class="mb-10">
+    <span class="label mb-2 block">Paiement</span>
+    <h1 class="text-display">Finaliser la commande</h1>
+  </div>
+
+  <form method="POST" action="{{ path('checkout_confirm') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+    <div class="lg:col-span-2 space-y-8">
+
+      <section>
+        <p class="font-display italic text-xl mb-5 text-shadow">Contact</p>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="input-label" for="co-first">Prénom</label>
+              <input class="input-field" type="text" id="co-first" name="first_name"
+                     required autocomplete="given-name"
+                     value="{{ user.first_name ?? '' }}" placeholder="Yasmine">
+            </div>
+            <div>
+              <label class="input-label" for="co-last">Nom</label>
+              <input class="input-field" type="text" id="co-last" name="last_name"
+                     required autocomplete="family-name"
+                     value="{{ user.last_name ?? '' }}" placeholder="Aziz">
+            </div>
+          </div>
+          <div>
+            <label class="input-label" for="co-email">E-mail</label>
+            <input class="input-field" type="email" id="co-email" name="email"
+                   required autocomplete="email"
+                   value="{{ user.email ?? '' }}" placeholder="votre@email.com">
+          </div>
+          <div>
+            <label class="input-label" for="co-phone">Téléphone</label>
+            <input class="input-field" type="tel" id="co-phone" name="phone"
+                   autocomplete="tel"
+                   value="{{ user.phone ?? '' }}" placeholder="+216 XX XXX XXX">
+          </div>
+        </div>
+      </section>
+
+      <div class="border-t border-olive/15"></div>
+
+      <section>
+        <p class="font-display italic text-xl mb-5 text-shadow">Adresse de livraison</p>
+        <div class="space-y-4">
+          <div>
+            <label class="input-label" for="co-addr">Adresse</label>
+            <input class="input-field" type="text" id="co-addr" name="address"
+                   required autocomplete="street-address"
+                   value="{{ user.address ?? '' }}" placeholder="15 Rue de la Liberté">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="input-label" for="co-city">Ville</label>
+              <input class="input-field" type="text" id="co-city" name="city"
+                     required autocomplete="address-level2"
+                     value="{{ user.city ?? '' }}" placeholder="Tunis">
+            </div>
+            <div>
+              <label class="input-label" for="co-zip">Code postal</label>
+              <input class="input-field" type="text" id="co-zip" name="zip"
+                     autocomplete="postal-code"
+                     value="{{ user.zip ?? '' }}" placeholder="1000">
+            </div>
+          </div>
+          <div>
+            <label class="input-label" for="co-notes">Notes de livraison (optionnel)</label>
+            <input class="input-field" type="text" id="co-notes" name="notes"
+                   placeholder="Instructions pour le livreur…">
+          </div>
+        </div>
+      </section>
+
+      <div class="border-t border-olive/15"></div>
+
+      <section>
+        <p class="font-display italic text-xl mb-5 text-shadow">Paiement</p>
+        <div class="space-y-3">
+
+          <label class="flex items-center gap-3 p-4 border border-shadow/15 cursor-pointer
+                        hover:border-olive transition-colors has-[:checked]:border-olive">
+            <input type="radio" name="payment_method" value="cash_on_delivery" class="accent-olive" checked>
+            <span class="text-sm font-light">Paiement à la livraison</span>
+          </label>
+
+          <label class="flex items-center gap-3 p-4 border border-shadow/15 cursor-pointer
+                        hover:border-olive transition-colors has-[:checked]:border-olive">
+            <input type="radio" name="payment_method" value="clicktopay" class="accent-olive">
+            <div class="flex items-center justify-between flex-1">
+              <span class="text-sm font-light">Carte bancaire — Click to Pay</span>
+              <span class="text-xs font-light" style="color:var(--c-mauve)">
+                Paiement sécurisé · Visa, Mastercard, CMT
+              </span>
+            </div>
+          </label>
+
+        </div>
+
+        {# Click to Pay notice — shown when selected #}
+        <div id="clicktopay-notice" class="hidden mt-3 p-4 border border-olive/20 flex items-start gap-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" class="shrink-0 mt-0.5" style="color:var(--c-olive)">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p class="text-xs font-light leading-relaxed" style="color:var(--c-shadow)">
+            Après confirmation, vous serez redirigé vers la page de paiement sécurisé
+            Click to Pay. Votre commande sera validée automatiquement au retour.
+          </p>
+        </div>
+
+      </section>
+    </div>
+
+    {# ── Order Summary ───────────────────────────────────────── #}
+    <div class="lg:col-span-1">
+      <div class="bg-white/70 p-6 sticky top-24 border border-olive/20">
+        <p class="label mb-4">Votre commande</p>
+
+        <div class="space-y-3 mb-4 pb-4 border-b border-shadow/8">
+          {% if cart_items is not empty %}
+            {% for item in cart_items %}
+              <div class="flex items-center gap-3">
+                <img src="{{ item.image ?? '/images/placeholder.jpg' }}"
+                     alt="{{ item.name }}" class="w-14 aspect-[3/4] object-cover shrink-0">
+                <div class="flex-1 min-w-0">
+                  <p class="font-display italic text-base leading-tight">{{ item.name }}</p>
+                  <p class="text-xs font-light" style="color:var(--c-mauve)">
+                    Taille {{ item.size }} · ×{{ item.qty }}
+                  </p>
+                </div>
+                <p class="text-sm font-light shrink-0" style="color:var(--c-olive)">
+                  {{ item.price }} DT
+                </p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-sm font-light text-center py-2" style="color:var(--c-mauve)">Panier vide</p>
+          {% endif %}
+        </div>
+
+        <div class="summary-row">
+          <span class="text-sm font-light">Sous-total</span>
+          <span class="text-sm">{{ subtotal ?? '0' }} DT</span>
+        </div>
+        <div class="summary-row">
+          <span class="text-sm font-light">Livraison</span>
+          <span class="text-sm font-light" style="color:var(--c-mauve)">Gratuite</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span style="color:var(--c-olive)">{{ subtotal ?? '0' }} DT</span>
+        </div>
+
+        <button type="submit" class="btn-primary w-full justify-center mt-6">
+          Confirmer la commande
+        </button>
+
+        <p class="text-center text-xs mt-4 font-light leading-relaxed" style="color:var(--c-mauve)">
+          En confirmant, vous acceptez nos
+          <a href="#" class="underline hover:text-olive">conditions générales de vente</a>.
+        </p>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+{% block scripts_extra %}
+<script>
+  document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const notice = document.getElementById('clicktopay-notice');
+      notice.classList.toggle('hidden', radio.value !== 'clicktopay');
+    });
+  });
+</script>
+{% endblock %}
+
+{% endblock %}

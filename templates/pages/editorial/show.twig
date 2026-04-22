@@ -1,0 +1,227 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ editorial.title ?? 'Éditorial' }} — Sevra{% endblock %}
+
+{% block content %}
+
+{# ═══ COVER ═══════════════════════════════════════════════════════ #}
+<div class="relative overflow-hidden" style="height: 96vh; min-height: 600px;">
+  {% if editorial is not null and editorial.cover_image is defined %}
+    <img src="{{ editorial.cover_image }}" alt="{{ editorial.title }}"
+         class="w-full h-full object-cover grayscale-[8%]" id="editorial-cover">
+  {% else %}
+    <div class="w-full h-full flex items-center justify-center"
+         style="background: linear-gradient(160deg, rgba(118,128,100,0.18) 0%, rgba(32,32,48,0.12) 100%)">
+      <p class="font-display italic text-8xl" style="color:rgba(118,128,100,0.15)">S</p>
+    </div>
+  {% endif %}
+  <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(32,32,48,0.6) 0%, transparent 50%)"></div>
+
+  {# Cover caption #}
+  <div class="absolute bottom-0 left-0 right-0 p-10 lg:p-20" id="cover-text" style="opacity:0">
+    <p class="label mb-4" style="color:rgba(242,229,217,0.55)">
+      {{ editorial.season ?? 'Éditorial' }} · Sevra Collection
+    </p>
+    <h1 class="font-display italic font-light leading-[1.0] mb-4"
+        style="font-size: clamp(2.5rem, 8vw, 7rem); color:var(--c-snow)">
+      {{ editorial.title ?? 'La lumière du soir' }}
+    </h1>
+    {% if editorial.subtitle is defined %}
+      <p class="text-base font-light max-w-md" style="color:rgba(242,229,217,0.6)">
+        {{ editorial.subtitle }}
+      </p>
+    {% endif %}
+  </div>
+
+  {# Scroll indicator #}
+  <div class="absolute bottom-8 right-10 flex flex-col items-center gap-2" style="color:rgba(242,229,217,0.4)">
+    <span class="label" style="color:rgba(242,229,217,0.4); writing-mode: vertical-rl; letter-spacing:0.25em">défiler</span>
+    <div class="w-[1px] h-12" style="background: rgba(242,229,217,0.3)"></div>
+  </div>
+</div>
+
+{# ═══ INTRO TEXT ══════════════════════════════════════════════════ #}
+<section class="max-w-3xl mx-auto px-6 lg:px-0 py-24 editorial-block">
+  <p class="font-display italic font-light leading-relaxed text-center"
+     style="font-size: clamp(1.4rem, 3vw, 2rem); color:var(--c-shadow); opacity:0.8">
+    {{ editorial.intro ?? 'La laine est une mémoire. Elle garde la chaleur du corps, la douceur du matin, la légèreté d'un moment suspendu entre deux saisons.' }}
+  </p>
+</section>
+
+{# ═══ LOOKBOOK IMAGES ═════════════════════════════════════════════ #}
+{% set images = editorial.images is defined ? editorial.images : [] %}
+
+{% if images is not empty %}
+
+  {# Image 1: full width #}
+  {% if images[0] is defined %}
+    <div class="editorial-block w-full overflow-hidden mb-2" style="height: 80vh; min-height: 400px;">
+      <img src="{{ images[0] }}" alt="{{ editorial.title }}"
+           class="w-full h-full object-cover grayscale-[5%] hover:grayscale-0 transition-all duration-700">
+    </div>
+  {% endif %}
+
+  {# Images 2+3: side by side #}
+  {% if images[1] is defined or images[2] is defined %}
+    <div class="grid grid-cols-2 gap-2 mb-2 editorial-block">
+      {% if images[1] is defined %}
+        <div class="overflow-hidden" style="aspect-ratio: 3/4;">
+          <img src="{{ images[1] }}" alt="{{ editorial.title }}"
+               class="w-full h-full object-cover grayscale-[5%] hover:grayscale-0 transition-all duration-700">
+        </div>
+      {% endif %}
+      {% if images[2] is defined %}
+        <div class="overflow-hidden self-end" style="aspect-ratio: 3/4; margin-top: 10%;">
+          <img src="{{ images[2] }}" alt="{{ editorial.title }}"
+               class="w-full h-full object-cover grayscale-[5%] hover:grayscale-0 transition-all duration-700">
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {# Mid-editorial quote #}
+  <div class="max-w-2xl mx-auto px-6 py-20 text-center editorial-block">
+    <div class="w-8 h-[1px] mx-auto mb-8" style="background:var(--c-olive)"></div>
+    <p class="font-display italic font-light text-2xl md:text-3xl leading-relaxed"
+       style="color:var(--c-shadow)">
+      {{ editorial.quote ?? '« Porter Sevra, c'est choisir la chaleur sans renoncer à l'élégance. »' }}
+    </p>
+    <div class="w-8 h-[1px] mx-auto mt-8" style="background:var(--c-olive)"></div>
+  </div>
+
+  {# Remaining images: alternating layout #}
+  {% for image in images|slice(3) %}
+    <div class="editorial-block grid grid-cols-1 md:grid-cols-2 gap-2 mb-2
+                {% if loop.index is even %}direction-rtl{% endif %}">
+      <div class="overflow-hidden {% if loop.index is odd %}md:col-start-1{% else %}md:col-start-2{% endif %}"
+           style="aspect-ratio: 4/5;">
+        <img src="{{ image }}" alt="{{ editorial.title }}"
+             class="w-full h-full object-cover grayscale-[5%] hover:grayscale-0 transition-all duration-700">
+      </div>
+    </div>
+  {% endfor %}
+
+{% else %}
+
+  {# ── Placeholder lookbook ────────────────────────────────── #}
+  <div class="editorial-block overflow-hidden mb-2" style="height: 80vh; min-height: 400px;
+       background: linear-gradient(160deg, rgba(118,128,100,0.14) 0%, rgba(148,132,155,0.09) 100%)">
+    <p class="w-full h-full flex items-center justify-center font-display italic text-8xl"
+       style="color:rgba(118,128,100,0.12)">I</p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2 mb-2 editorial-block">
+    {% for j in 1..2 %}
+      <div class="overflow-hidden flex items-center justify-center"
+           style="aspect-ratio: 3/4;
+                  background: linear-gradient(145deg,
+                    rgba({{ j is odd ? '118,128,100' : '148,132,155' }}, 0.10) 0%,
+                    rgba(32,32,48,0.05) 100%)">
+        <p class="font-display italic text-5xl" style="color:rgba(118,128,100,0.15)">{{ j + 1 }}</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="max-w-2xl mx-auto px-6 py-20 text-center editorial-block">
+    <div class="w-8 h-[1px] mx-auto mb-8" style="background:var(--c-olive)"></div>
+    <p class="font-display italic font-light text-2xl md:text-3xl leading-relaxed"
+       style="color:var(--c-shadow)">
+      « Porter Sevra, c'est choisir la chaleur sans renoncer à l'élégance. »
+    </p>
+    <div class="w-8 h-[1px] mx-auto mt-8" style="background:var(--c-olive)"></div>
+  </div>
+
+{% endif %}
+
+{# ═══ SHOP THE LOOK ═══════════════════════════════════════════════ #}
+{% if editorial is not null and editorial.products is defined and editorial.products is not empty %}
+  <section class="max-w-7xl mx-auto px-6 lg:px-16 py-20 editorial-block">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <span class="label mb-2 block">Dans cet éditorial</span>
+        <h2 class="font-display italic text-3xl font-light" style="color:var(--c-shadow)">
+          Les pièces portées
+        </h2>
+      </div>
+      <a href="{{ path('shop') }}" class="nav-link flex items-center gap-2" style="color:var(--c-olive)">
+        Tout voir
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {% for product in editorial.products %}
+        {% include 'components/product/product_card.twig' with { product: product } %}
+      {% endfor %}
+    </div>
+  </section>
+{% else %}
+  <div class="max-w-7xl mx-auto px-6 lg:px-16 py-20 text-center editorial-block">
+    <span class="label mb-4 block">Découvrir</span>
+    <p class="font-display italic font-light text-3xl mb-8" style="color:var(--c-shadow)">
+      Les pièces de cet éditorial
+    </p>
+    <a href="{{ path('shop') }}" class="btn-primary">Voir la collection</a>
+  </div>
+{% endif %}
+
+{# ═══ BACK + NEXT NAV ═════════════════════════════════════════════ #}
+<div class="border-t" style="border-color:rgba(118,128,100,0.2)">
+  <div class="max-w-7xl mx-auto px-6 lg:px-16 py-10 flex items-center justify-between">
+    <a href="{{ path('editorials') }}"
+       class="flex items-center gap-3 text-xs tracking-[0.18em] uppercase transition-colors hover:opacity-60"
+       style="color:var(--c-shadow)">
+      <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="28" y2="0.5" stroke="currentColor"/></svg>
+      Tous les éditoriaux
+    </a>
+    {% if editorial is not null and editorial.next_slug is defined %}
+      <a href="{{ path('editorial_show', { slug: editorial.next_slug }) }}"
+         class="flex items-center gap-3 text-xs tracking-[0.18em] uppercase transition-colors hover:opacity-60"
+         style="color:var(--c-shadow)">
+        Suivant
+        <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="28" y2="0.5" stroke="currentColor"/></svg>
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  // Cover text fade in
+  document.getElementById('cover-text')?.animate(
+    [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'translateY(0)' }],
+    { duration: 1100, delay: 400, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' }
+  );
+
+  // Scroll-triggered reveals
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.06 });
+
+  document.querySelectorAll('.editorial-block').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(32px)';
+    el.style.transition = `opacity 1s cubic-bezier(0.4,0,0.2,1) ${i * 0.05}s, transform 1s cubic-bezier(0.4,0,0.2,1) ${i * 0.05}s`;
+    observer.observe(el);
+  });
+
+  // Subtle parallax on cover image
+  const cover = document.getElementById('editorial-cover');
+  if (cover) {
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      cover.style.transform = `translateY(${scrolled * 0.25}px)`;
+    }, { passive: true });
+  }
+</script>
+{% endblock %}

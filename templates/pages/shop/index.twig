@@ -1,0 +1,98 @@
+{# templates/pages/shop/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Collection — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
+
+  {# ── Page Header ────────────────────────────────────────────── #}
+  <div class="mb-10">
+    <span class="label mb-2 block">Sevra Collection</span>
+    <h1 class="text-display">
+      {% if active_type == 'pants' %}Ensembles Pantalon
+      {% elseif active_type == 'shorts' %}Ensembles Short
+      {% else %}La Collection
+      {% endif %}
+    </h1>
+  </div>
+
+  {# ── Search + Filters ───────────────────────────────────────── #}
+  <div class="flex flex-col md:flex-row gap-4 md:items-center justify-between mb-10
+              pb-6 border-b border-olive/15">
+
+    {# Search bar #}
+    <form method="GET" action="{{ path('shop') }}" class="search-bar max-w-sm w-full" id="search-form">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" class="text-mauve shrink-0" style="color:var(--c-mauve)">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        id="search-input"
+        type="search"
+        name="q"
+        value="{{ search_query ?? '' }}"
+        placeholder="Rechercher un modèle…"
+        autocomplete="off">
+      {% if search_query %}
+        <a href="{{ path('shop') }}" class="btn-ghost text-mauve hover:text-shadow text-xs">✕</a>
+      {% endif %}
+    </form>
+
+    {# Filter chips #}
+    <div class="flex flex-wrap gap-2" data-filter-group>
+      <button class="filter-chip {% if active_type is null %}active{% endif %}"
+              data-filter="all"
+              onclick="window.location='{{ path('shop') }}'">
+        Tous
+      </button>
+      <button class="filter-chip {% if active_type == 'pants' %}active{% endif %}"
+              data-filter="pants"
+              onclick="window.location='{{ path('shop', { type: 'pants' }) }}'">
+        Pantalon
+      </button>
+      <button class="filter-chip {% if active_type == 'shorts' %}active{% endif %}"
+              data-filter="shorts"
+              onclick="window.location='{{ path('shop', { type: 'shorts' }) }}'">
+        Short
+      </button>
+    </div>
+  </div>
+
+  {# ── Products Grid ──────────────────────────────────────────── #}
+  {% if products is not empty %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+      {% for product in products %}
+        {% include 'components/product/product_card.twig' with { product: product } %}
+      {% endfor %}
+    </div>
+  {% else %}
+    {# Empty state #}
+    <div class="flex flex-col items-center justify-center py-28 text-center">
+      <p class="font-display italic text-3xl text-shadow/30 mb-3">Aucun résultat</p>
+      <p class="text-sm text-mauve font-light mb-6">
+        {% if search_query %}
+          Aucun article ne correspond à "{{ search_query }}".
+        {% else %}
+          La collection arrive bientôt.
+        {% endif %}
+      </p>
+      <a href="{{ path('shop') }}" class="btn-outline">Tout voir</a>
+    </div>
+
+    {# Skeleton for loading state (shown briefly by JS) #}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 hidden" id="skeleton-grid">
+      {% for i in 1..8 %}
+        <div class="product-card animate-pulse">
+          <div class="aspect-[3/4]" style="background:rgba(118,128,100,0.08)"></div>
+          <div class="product-card__body space-y-2">
+            <div class="h-5 rounded w-3/4" style="background:rgba(118,128,100,0.1)"></div>
+            <div class="h-4 rounded w-1/3" style="background:rgba(118,128,100,0.06)"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
