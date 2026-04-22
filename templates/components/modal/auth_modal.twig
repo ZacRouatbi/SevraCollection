@@ -252,12 +252,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. INPUT VALIDATION (Blur & No Numbers)
     const fields = [
-        { id: 'reg-firstname', hintId: 'firstname-hint', regex: /^[^0-9]+$/, msg: "Le prénom ne doit pas contenir de chiffres." },
-        { id: 'reg-lastname', hintId: 'lastname-hint', regex: /^[^0-9]+$/, msg: "Le nom ne doit pas contenir de chiffres." },
-        { id: 'reg-email', hintId: 'email-hint', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Veuillez entrer un email valide." },
-        { id: 'reg-password', hintId: 'password-hint', regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/, msg: "8+ caractères, Maj, Chiffre, Symbole." }
-    ];
-
+    {
+        id: 'reg-firstname',
+        hintId: 'firstname-hint',
+        regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/,
+        msg: "Le prénom doit contenir au moins 2 lettres (pas de chiffres ni symboles)."
+    },
+    {
+        id: 'reg-lastname',
+        hintId: 'lastname-hint',
+        regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/,
+        msg: "Le nom doit contenir au moins 2 lettres (pas de chiffres ni symboles)."
+    },
+    {
+        id: 'reg-email',
+        hintId: 'email-hint',
+        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        msg: "Veuillez entrer un email valide."
+    },
+    {
+        id: 'reg-password',
+        hintId: 'password-hint',
+        regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/,
+        msg: "8+ caractères, Majuscule, Chiffre, Symbole."
+    }
+];
     fields.forEach(field => {
         const input = document.getElementById(field.id);
         const hint = document.getElementById(field.hintId);
