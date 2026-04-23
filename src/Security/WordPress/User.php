@@ -11,6 +11,7 @@ class User implements UserInterface
     public function __construct(
         private readonly string $email,
         private readonly string $token,
+        private readonly int    $wpUserId,
         private readonly array $roles = []
     ) {}
 
@@ -36,5 +37,18 @@ class User implements UserInterface
     public function getToken(): string
     {
         return $this->token;
+    }
+     public function getWpId(): int
+    {
+        return $this->wpUserId;
+    }
+     public function getWpUser(): array
+    {
+        return [
+            'id'    => $this->wpUserId,
+            'email' => $this->email,
+            'first_name' => '',
+            'last_name'  => '',
+        ];
     }
 }

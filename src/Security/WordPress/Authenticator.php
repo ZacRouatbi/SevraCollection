@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security\WordPress;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,13 +20,14 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
-
 class Authenticator extends AbstractAuthenticator
 {
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly string $wpUrl
+         private readonly LoggerInterface $logger,
+        private readonly string $wpUrl,
+
     ) {}
 
     public function supports(Request $request): ?bool
@@ -74,9 +76,10 @@ class Authenticator extends AbstractAuthenticator
         $payload = [];
         if (count($jwtParts) === 3) {
             $payload = json_decode(base64_decode($jwtParts[1]), true);
+            $this->logger->error('JWT PAYLOAD', $payload);
         }
 
-        $wpUserId = $payload['sub'] ?? 0;
+        $wpUserId = (int) ($payload['data']['user']['id'] ?? 0);
         $roles = [];
         if (isset($payload['roles'])) {
             $roles = (array) $payload['roles'];
