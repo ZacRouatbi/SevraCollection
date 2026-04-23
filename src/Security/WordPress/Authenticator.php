@@ -63,7 +63,6 @@ class Authenticator extends AbstractAuthenticator
 
             $data = $response->toArray();
             $token = $data['token'] ?? null;
-
             if (!$token) {
                 throw new CustomUserMessageAuthenticationException('Données d\'authentification incomplètes.');
             }
@@ -71,15 +70,26 @@ class Authenticator extends AbstractAuthenticator
         } catch (TransportExceptionInterface $e) {
             throw new CustomUserMessageAuthenticationException('Connexion au service impossible.');
         }
+        $jwtParts = explode('.', $token);
+        $payload = [];
+        if (count($jwtParts) === 3) {
+            $payload = json_decode(base64_decode($jwtParts[1]), true);
+        }
+
+        $wpUserId = $payload['sub'] ?? 0;
+        $roles = [];
+        if (isset($payload['roles'])) {
+            $roles = (array) $payload['roles'];
+        }
 
         return new SelfValidatingPassport(
-            new UserBadge($email, function () use ($email, $token) {
-                return new User($email, $token);
+            new UserBadge($email, function () use ($email, $token, $wpUserId, $roles) {
+                return new User($email, $token, $wpUserId, $roles);
             }),
             [
                 new CsrfTokenBadge('authenticate', $csrfToken)
             ]
-        );
+            );
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

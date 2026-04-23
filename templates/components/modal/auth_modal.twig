@@ -22,78 +22,74 @@
     </div>
 
     {# ═══ LOGIN ════════════════════════════════════════════════ #}
+    <div data-panel="login" class="modal-panel">
+        <p class="font-display italic font-light text-center mb-8"
+           style="font-size:1.75rem; color:var(--c-shadow)">Bon retour.</p>
 
-{# ═══ LOGIN ════════════════════════════════════════════════ #}
-<div data-panel="login" class="modal-panel">
-    <p class="font-display italic font-light text-center mb-8"
-       style="font-size:1.75rem; color:var(--c-shadow)">Bon retour.</p>
+        {% set auth_error = null %}
+        {% set email_value = '' %}
 
-    {# --- Error Display Logic --- #}
-    {% set auth_error = null %}
-    {% set email_value = '' %}
+        {% if error is defined and error %}
+            {% set auth_error = error %}
+        {% elseif app.session is defined and app.session.has('_security.last_error') %}
+            {% set auth_error = app.session.get('_security.last_error') %}
+        {% elseif app.session is defined and app.session.has('_security.main.last_error') %}
+            {% set auth_error = app.session.get('_security.main.last_error') %}
+        {% endif %}
 
-    {# Check multiple sources for error #}
-    {% if error is defined and error %}
-        {% set auth_error = error %}
-    {% elseif app.session is defined and app.session.has('_security.last_error') %}
-        {% set auth_error = app.session.get('_security.last_error') %}
-    {% elseif app.session is defined and app.session.has('_security.main.last_error') %}
-        {% set auth_error = app.session.get('_security.main.last_error') %}
-    {% endif %}
+        {% if last_username is defined and last_username %}
+            {% set email_value = last_username %}
+        {% elseif app.session is defined and app.session.has('_security.last_username') %}
+            {% set email_value = app.session.get('_security.last_username') %}
+        {% elseif app.session is defined and app.session.has('_security.main.last_username') %}
+            {% set email_value = app.session.get('_security.main.last_username') %}
+        {% endif %}
 
-    {# Get last username #}
-    {% if last_username is defined and last_username %}
-        {% set email_value = last_username %}
-    {% elseif app.session is defined and app.session.has('_security.last_username') %}
-        {% set email_value = app.session.get('_security.last_username') %}
-    {% elseif app.session is defined and app.session.has('_security.main.last_username') %}
-        {% set email_value = app.session.get('_security.main.last_username') %}
-    {% endif %}
+        {% if auth_error %}
+            <div id="auth-error-display" class="mb-6 py-3 px-4 text-center"
+                 style="background: rgba(217, 83, 79, 0.05); border: 1px solid rgba(217, 83, 79, 0.2);
+                        color:#d9534f; font-size:0.75rem; font-family:var(--font-body); border-radius: 2px;">
+                {{ auth_error.messageKey|trans(auth_error.messageData, 'security') }}
+            </div>
+        {% endif %}
 
-    {% if auth_error %}
-        <div id="auth-error-display" class="mb-6 py-3 px-4 text-center"
-             style="background: rgba(217, 83, 79, 0.05); border: 1px solid rgba(217, 83, 79, 0.2);
-                    color:#d9534f; font-size:0.75rem; font-family:var(--font-body); border-radius: 2px;">
-            {{ auth_error.messageKey|trans(auth_error.messageData, 'security') }}
-        </div>
-    {% endif %}
+        <form method="POST" action="{{ path('login_check') }}" class="space-y-5" id="login-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-    <form method="POST" action="{{ path('login_check') }}" class="space-y-5">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-        <div>
-            <label class="input-label" for="login-email">E-mail</label>
-            <input class="input-field" type="email" id="login-email" name="email"
-                   autocomplete="email" required placeholder="votre@email.com"
-                   value="{{ email_value }}">
-        </div>
-        <div>
-            <label class="input-label" for="login-password">Mot de passe</label>
-            <input class="input-field" type="password" id="login-password" name="password"
-                   autocomplete="current-password" required placeholder="••••••••">
-        </div>
-        <div class="flex justify-end -mt-2">
-            <button type="button"
-                    style="font-size:0.7rem; color:var(--c-mauve); font-family:var(--font-body); background:none; border:none; cursor:pointer;"
-                    onmouseover="this.style.color='var(--c-olive)'"
-                    onmouseout="this.style.color='var(--c-mauve)'"
-                    onclick="document.querySelector('[data-tab=reset]').click()">
-                Mot de passe oublié ?
+            <div>
+                <label class="input-label" for="login-email">E-mail</label>
+                <input class="input-field" type="email" id="login-email" name="email"
+                       autocomplete="email" required placeholder="votre@email.com"
+                       value="{{ email_value }}">
+            </div>
+            <div>
+                <label class="input-label" for="login-password">Mot de passe</label>
+                <input class="input-field" type="password" id="login-password" name="password"
+                       autocomplete="current-password" required placeholder="••••••••">
+            </div>
+            <div class="flex justify-end -mt-2">
+                <button type="button"
+                        style="font-size:0.7rem; color:var(--c-mauve); font-family:var(--font-body); background:none; border:none; cursor:pointer;"
+                        onmouseover="this.style.color='var(--c-olive)'"
+                        onmouseout="this.style.color='var(--c-mauve)'"
+                        onclick="document.querySelector('[data-tab=reset]').click()">
+                    Mot de passe oublié ?
+                </button>
+            </div>
+            <button type="submit" class="btn-primary w-full justify-center">
+                Se connecter
             </button>
-        </div>
-        <button type="submit" class="btn-primary w-full justify-center">
-            Se connecter
-        </button>
-    </form>
+        </form>
 
-    <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
-        Pas encore de compte ?
-        <button style="color:var(--c-olive); background:none; border:none; cursor:pointer; font-size:0.72rem; font-family:var(--font-body);"
-                onclick="document.querySelector('[data-tab=register]').click()">
-            S'inscrire
-        </button>
-    </p>
-</div>
+        <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
+            Pas encore de compte ?
+            <button style="color:var(--c-olive); background:none; border:none; cursor:pointer; font-size:0.72rem; font-family:var(--font-body);"
+                    onclick="document.querySelector('[data-tab=register]').click()">
+                S'inscrire
+            </button>
+        </p>
+    </div>
+
     {# ═══ REGISTER ═════════════════════════════════════════════ #}
     <div data-panel="register" class="modal-panel hidden">
       <p class="font-display italic font-light text-center mb-8"
@@ -143,14 +139,17 @@
         Saisissez votre e-mail — nous vous enverrons un lien de réinitialisation.
       </p>
 
-      <form method="POST" action="{{ path('reset_password') }}" class="space-y-5" id="reset-form">
+      <div id="reset-message-container" class="mb-4"></div>
+
+      <form method="POST" action="{{ path('reset_password_request') }}" class="space-y-5" id="reset-form">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('reset_password') }}">
         <div>
           <label class="input-label" for="reset-email">E-mail</label>
           <input class="input-field" type="email" id="reset-email" name="email"
                  required autocomplete="email" placeholder="votre@email.com">
+          <p id="reset-email-hint" class="field-hint"></p>
         </div>
-        <button type="submit" class="btn-primary w-full justify-center">
+        <button type="submit" id="reset-submit" class="btn-primary w-full justify-center">
           Envoyer le lien
         </button>
       </form>
@@ -159,6 +158,13 @@
         <p class="font-display italic text-xl mb-2" style="color:var(--c-olive)">Envoyé ✓</p>
         <p style="font-size:0.8rem; color:var(--c-mauve)">Vérifiez votre boîte mail.</p>
       </div>
+
+      <p class="text-center mt-6" style="font-size:0.72rem; color:var(--c-mauve)">
+          <button style="color:var(--c-olive); background:none; border:none; cursor:pointer; font-size:0.72rem; font-family:var(--font-body);"
+                  onclick="document.querySelector('[data-tab=login]').click()">
+              ← Retour à la connexion
+          </button>
+      </p>
     </div>
 
   </div>
@@ -170,54 +176,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBox = document.querySelector('.modal-box');
     const closeBtn = document.getElementById('modal-close');
 
-    // Function to check for errors and open modal
     function checkAndOpenModal() {
-        // Check for error display element
         const errorDisplay = document.getElementById('auth-error-display');
 
-        // Check for show_login_modal flag (passed from template)
+        {#
+          BUG FIX #3 (twig/JS): The original emitted:
+            const showModalFlag = true;          (or false)
+          then compared:  showModalFlag === 'true'
+          A boolean is never strictly equal to the string 'true', so the modal
+          never opened from the server-side flag.
+          Fix: emit a proper JS boolean and compare without quotes.
+        #}
         const showModalFlag = {{ show_login_modal is defined and show_login_modal ? 'true' : 'false' }};
 
-        // Check URL hash
-        const hasLoginHash = window.location.hash === '#login';
+        const hasLoginHash = window.location.hash === '#login' || window.location.hash === '#reset';
 
-        if (errorDisplay || showModalFlag === 'true' || hasLoginHash) {
+        {# BUG FIX #3 continued: was `showModalFlag === 'true'`, now just `showModalFlag` #}
+        if (errorDisplay || showModalFlag || hasLoginHash) {
             if (modalOverlay) {
                 modalOverlay.classList.add('is-open');
-                // Switch to login tab
-                const loginTab = document.querySelector('[data-tab="login"]');
-                if (loginTab) loginTab.click();
+
+                if (window.location.hash === '#reset') {
+                    const resetTab = document.querySelector('[data-tab="reset"]');
+                    if (resetTab) resetTab.click();
+                } else {
+                    const loginTab = document.querySelector('[data-tab="login"]');
+                    if (loginTab) loginTab.click();
+                }
             }
         }
+
+        {% if app.flashes is defined %}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    showFlashMessage('{{ label }}', '{{ message|e('js') }}');
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
     }
 
-    // Check immediately
-    checkAndOpenModal();
+    function showFlashMessage(type, message) {
+        const container = document.getElementById('reset-message-container');
+        if (!container) return;
 
-    // Also check after a short delay (for dynamically added errors)
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'py-3 px-4 text-center mb-4';
+
+        if (type === 'error') {
+            messageDiv.style.cssText = 'background: rgba(217, 83, 79, 0.05); border: 1px solid rgba(217, 83, 79, 0.2); color:#d9534f; font-size:0.75rem; font-family:var(--font-body); border-radius: 2px;';
+        } else {
+            messageDiv.style.cssText = 'background: rgba(118, 128, 100, 0.05); border: 1px solid rgba(118, 128, 100, 0.2); color:var(--c-olive); font-size:0.75rem; font-family:var(--font-body); border-radius: 2px;';
+        }
+
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+
+        setTimeout(() => messageDiv.remove(), 5000);
+    }
+
+    checkAndOpenModal();
     setTimeout(checkAndOpenModal, 100);
 
-    // 2. MODAL SENSITIVITY PROTECTION (Mousedown/Mouseup logic)
+    // 2. MODAL SENSITIVITY PROTECTION
     let clickStartedInside = false;
 
     if (modalBox) {
-        modalBox.addEventListener('mousedown', () => {
-            clickStartedInside = true;
-        });
+        modalBox.addEventListener('mousedown', () => { clickStartedInside = true; });
     }
 
     if (modalOverlay) {
         modalOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === modalOverlay) {
-                clickStartedInside = false;
-            }
+            if (e.target === modalOverlay) clickStartedInside = false;
         });
 
         modalOverlay.addEventListener('mouseup', (e) => {
             if (!clickStartedInside && e.target === modalOverlay) {
                 modalOverlay.classList.remove('is-open');
-                // Clear URL hash if present
-                if (window.location.hash === '#login') {
+                if (window.location.hash) {
                     history.pushState("", document.title, window.location.pathname + window.location.search);
                 }
             }
@@ -228,8 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             modalOverlay.classList.remove('is-open');
-            // Clear URL hash if present
-            if (window.location.hash === '#login') {
+            if (window.location.hash) {
                 history.pushState("", document.title, window.location.pathname + window.location.search);
             }
         });
@@ -247,46 +281,102 @@ document.addEventListener('DOMContentLoaded', () => {
             panels.forEach(p => p.classList.add('hidden'));
             const targetPanel = document.querySelector(`[data-panel="${target}"]`);
             if (targetPanel) targetPanel.classList.remove('hidden');
+
+            const messageContainer = document.getElementById('reset-message-container');
+            if (messageContainer) messageContainer.innerHTML = '';
         });
     });
 
-    // 4. INPUT VALIDATION (Blur & No Numbers)
-    const fields = [
-    {
-        id: 'reg-firstname',
-        hintId: 'firstname-hint',
-        regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/,
-        msg: "Le prénom doit contenir au moins 2 lettres (pas de chiffres ni symboles)."
-    },
-    {
-        id: 'reg-lastname',
-        hintId: 'lastname-hint',
-        regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/,
-        msg: "Le nom doit contenir au moins 2 lettres (pas de chiffres ni symboles)."
-    },
-    {
-        id: 'reg-email',
-        hintId: 'email-hint',
-        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        msg: "Veuillez entrer un email valide."
-    },
-    {
-        id: 'reg-password',
-        hintId: 'password-hint',
-        regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/,
-        msg: "8+ caractères, Majuscule, Chiffre, Symbole."
+    // 4. RESET PASSWORD FORM HANDLING
+    const resetForm = document.getElementById('reset-form');
+    if (resetForm) {
+        const emailInput = document.getElementById('reset-email');
+        const emailHint = document.getElementById('reset-email-hint');
+        const submitBtn = document.getElementById('reset-submit');
+        const successDiv = document.getElementById('reset-success');
+
+        emailInput.addEventListener('blur', () => {
+            const email = emailInput.value.trim();
+            if (email === '') return;
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                emailHint.textContent = 'Veuillez entrer un email valide.';
+                emailInput.style.borderColor = '#d9534f';
+            } else {
+                emailHint.textContent = '';
+                emailInput.style.borderColor = 'var(--c-olive)';
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            emailHint.textContent = '';
+            emailInput.style.borderColor = 'rgba(118,128,100,0.2)';
+        });
+
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = emailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                emailHint.textContent = 'Veuillez entrer un email valide.';
+                emailInput.style.borderColor = '#d9534f';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Envoi en cours...';
+
+            try {
+                const formData = new FormData(resetForm);
+                const response = await fetch(resetForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                {#
+                  BUG FIX #4 (JS): The original only checked response.ok (status 200-299).
+                  The controller returns HTTP 200 with { success: false } for "user not found"
+                  (security best-practice silent success). We must parse the JSON body
+                  and check the `success` field — not just the HTTP status code.
+                #}
+                const data = await response.json();
+
+                if (data.success) {
+                    resetForm.classList.add('hidden');
+                    successDiv.classList.remove('hidden');
+                } else {
+                    showFlashMessage('error', data.message || 'Une erreur est survenue. Veuillez réessayer.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Envoyer le lien';
+                }
+            } catch (error) {
+                showFlashMessage('error', 'Erreur de connexion. Veuillez réessayer.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Envoyer le lien';
+            }
+        });
     }
-];
+
+    // 5. INPUT VALIDATION FOR REGISTRATION
+    const fields = [
+        { id: 'reg-firstname', hintId: 'firstname-hint', regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/, msg: "Le prénom doit contenir au moins 2 lettres (pas de chiffres ni symboles)." },
+        { id: 'reg-lastname',  hintId: 'lastname-hint',  regex: /^[A-Za-zÀ-ÿ\s\-']{2,}$/, msg: "Le nom doit contenir au moins 2 lettres (pas de chiffres ni symboles)." },
+        { id: 'reg-email',     hintId: 'email-hint',     regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Veuillez entrer un email valide." },
+        { id: 'reg-password',  hintId: 'password-hint',  regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/, msg: "8+ caractères, Majuscule, Chiffre, Symbole." }
+    ];
+
     fields.forEach(field => {
         const input = document.getElementById(field.id);
         const hint = document.getElementById(field.hintId);
-
         if (!input) return;
 
         input.addEventListener('blur', () => {
             const val = input.value.trim();
             if (val === "") return;
-
             if (field.regex.test(val)) {
                 hint.textContent = "";
                 input.style.borderColor = "var(--c-olive)";
@@ -301,67 +391,36 @@ document.addEventListener('DOMContentLoaded', () => {
             input.style.borderColor = "rgba(118,128,100,0.2)";
         });
     });
+
+    const regForm = document.getElementById('reg-form');
+    if (regForm) {
+        regForm.addEventListener('submit', (e) => {
+            let isValid = true;
+            fields.forEach(field => {
+                const input = document.getElementById(field.id);
+                if (input) {
+                    const val = input.value.trim();
+                    if (!field.regex.test(val)) {
+                        isValid = false;
+                        const hint = document.getElementById(field.hintId);
+                        if (hint) hint.textContent = field.msg;
+                        input.style.borderColor = '#d9534f';
+                    }
+                }
+            });
+            if (!isValid) e.preventDefault();
+        });
+    }
 });
 </script>
 
 <style>
-  .field-hint {
-    font-size: 0.65rem;
-    color: #d9534f;
-    margin-top: 0.35rem;
-    min-height: 1.1em;
-    font-family: var(--font-body);
-  }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    background: rgba(242, 229, 217, 0.25);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.35s ease;
-  }
-  .modal-overlay.is-open {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .modal-box {
-    background: var(--c-white);
-    width: min(440px, 92vw);
-    padding: 2.5rem 2.75rem 3rem;
-    position: relative;
-    border-radius: 2px;
-    transform: translateY(16px);
-    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 8px 48px rgba(118,128,100,0.12), 0 2px 12px rgba(32,32,48,0.06);
-  }
-  .modal-overlay.is-open .modal-box {
-    transform: translateY(0);
-  }
-  .modal-tab {
-    font-family: var(--font-body);
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0 0 0.75rem;
-    border: none;
-    border-bottom: 1.5px solid transparent;
-    background: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--c-mauve);
-  }
-  .modal-tab.active {
-    color: var(--c-shadow);
-    border-bottom-color: var(--c-olive);
-  }
-  .modal-tab:hover:not(.active) {
-    color: var(--c-shadow);
-  }
+  .field-hint { font-size: 0.65rem; color: #d9534f; margin-top: 0.35rem; min-height: 1.1em; font-family: var(--font-body); }
+  .modal-overlay { position: fixed; inset: 0; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(242, 229, 217, 0.25); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+  .modal-overlay.is-open { opacity: 1; pointer-events: all; }
+  .modal-box { background: var(--c-white); width: min(440px, 92vw); padding: 2.5rem 2.75rem 3rem; position: relative; border-radius: 2px; transform: translateY(16px); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 8px 48px rgba(118,128,100,0.12), 0 2px 12px rgba(32,32,48,0.06); }
+  .modal-overlay.is-open .modal-box { transform: translateY(0); }
+  .modal-tab { font-family: var(--font-body); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0 0 0.75rem; border: none; border-bottom: 1.5px solid transparent; background: none; cursor: pointer; transition: all 0.2s; color: var(--c-mauve); }
+  .modal-tab.active { color: var(--c-shadow); border-bottom-color: var(--c-olive); }
+  .modal-tab:hover:not(.active) { color: var(--c-shadow); }
 </style>

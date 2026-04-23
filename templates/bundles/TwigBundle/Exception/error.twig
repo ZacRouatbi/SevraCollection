@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-16" style="background: var(--c-bg);">
+    <div class="text-center max-w-2xl mx-auto">
+        <div class="mb-8 relative">
+            <h1 class="font-display text-[180px] md:text-[220px] leading-none font-light italic"
+                style="color: rgba(118,128,100,0.08); user-select: none;">
+                {{ status_code|default(500) }}
+            </h1>
+        </div>
+
+        <p class="font-display italic mb-6 tracking-widest"
+           style="font-size:0.7rem; color: var(--c-olive); letter-spacing:0.3em">
+            SEVRA COLLECTION
+        </p>
+
+        <h2 class="font-display italic font-light text-3xl md:text-4xl mb-4"
+            style="color: var(--c-shadow);">
+            {{ status_text|default('Erreur inattendue') }}
+        </h2>
+
+        <p class="text-lg mb-8 max-w-md mx-auto"
+           style="color: var(--c-mauve); font-family: var(--font-body); line-height: 1.6;">
+            Une erreur est survenue. Veuillez réessayer plus tard.
+        </p>
+
+        <a href="{{ path('home') }}"
+           class="inline-flex items-center px-6 py-3 rounded-sm text-sm font-medium"
+           style="background: var(--c-olive); color: var(--c-cream);">
+            Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}

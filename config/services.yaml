@@ -20,3 +20,12 @@ services:
     App\Security\WordPress\Authenticator:
         arguments:
             $wpUrl: '%env(WORDPRESS_URL)%'
+    App\Service\PasswordResetService:
+        arguments:
+            $mailerFrom:   '%env(SMTP_FROM)%'
+            $wpUrl:        '%env(WORDPRESS_URL)%'
+            $wpApiSecret:  '%env(WP_API_SECRET)%'
+    App\Service\AccountService:
+        arguments:
+            $wpUrl:        '%env(WORDPRESS_URL)%'
+            $wpApiSecret:  '%env(WP_API_SECRET)%'
