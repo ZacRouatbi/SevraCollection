@@ -107,24 +107,24 @@ class Authenticator extends AbstractAuthenticator
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
-{
-    if ($request->hasSession()) {
-        // Store in both formats to ensure it's found
-        $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
-        $request->getSession()->set('_security.last_error', $exception);
-        $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $request->request->get('email'));
-        $request->getSession()->set('_security.last_username', $request->request->get('email'));
+    {
+        if ($request->hasSession()) {
+            // Store in both formats to ensure it's found
+            $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
+            $request->getSession()->set('_security.last_error', $exception);
+            $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $request->request->get('email'));
+            $request->getSession()->set('_security.last_username', $request->request->get('email'));
+        }
+
+        // Get the referer URL
+        $referer = $request->headers->get('referer');
+
+        // If referer exists, redirect back to it
+        if ($referer && str_contains($referer, $request->getHost())) {
+            return new RedirectResponse($referer);
+        }
+
+        // Fallback to home page
+        return new RedirectResponse($this->urlGenerator->generate('home'));
     }
-
-    // Get the referer URL
-    $referer = $request->headers->get('referer');
-
-    // If referer exists, redirect back to it
-    if ($referer && str_contains($referer, $request->getHost())) {
-        return new RedirectResponse($referer);
-    }
-
-    // Fallback to home page
-    return new RedirectResponse($this->urlGenerator->generate('home'));
-}
 }

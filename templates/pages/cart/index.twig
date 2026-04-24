@@ -8,81 +8,116 @@
 
   <div class="mb-10">
     <span class="label mb-2 block">Récapitulatif</span>
-    <h1 class="text-display">Votre panier</h1>
+    <h1 class="text-display">Votre <em>panier</em></h1>
   </div>
 
   {% if cart_items is not empty %}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10" id="cart-page-wrap">
 
       {# ── Items list ──────────────────────────────────────────── #}
-      <div class="lg:col-span-2 space-y-0 divide-y divide-shadow/8">
+      <div class="lg:col-span-2 divide-y" style="divide-color:rgba(32,32,48,0.07)" id="cart-page-items">
         {% for item in cart_items %}
-          <div class="cart-item">
-            <img src="{{ item.image ?? '/images/placeholder.jpg' }}"
-                 alt="{{ item.name }}" class="cart-item__img">
-            <div class="flex-1 min-w-0 py-1">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-display italic text-xl leading-tight mb-0.5">{{ item.name }}</p>
-                  <p class="label mb-3">
-                    {{ item.type == 'pants' ? 'Pantalon' : 'Short' }} · Taille {{ item.size }}
-                  </p>
-                </div>
-                <form method="POST" action="{{ path('cart_remove') ?? '#' }}">
-                  <input type="hidden" name="item_key" value="{{ item.key ?? '' }}">
-                  <button type="submit" class="btn-ghost text-mauve hover:text-shadow ml-3">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
-                </form>
-              </div>
-              <div class="flex items-center justify-between">
-                <div class="qty-stepper">
-                  <button type="button" data-qty-dec>−</button>
-                  <span>{{ item.qty ?? 1 }}</span>
-                  <button type="button" data-qty-inc>+</button>
-                </div>
-                <p class="font-display italic text-xl" style="color:var(--c-olive)">
-                  {{ item.price }} DT
+        <div class="cart-item py-6" data-item-key="{{ item.key }}">
+          <img src="{{ item.image ?? '/images/placeholder.jpg' }}"
+               alt="{{ item.name }}" class="cart-item__img">
+
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                <p class="font-display italic text-xl leading-tight mb-0.5">{{ item.name }}</p>
+                <p class="label mb-3">
+                  {% if item.size %}Taille {{ item.size }}{% endif %}
+                  {% if item.size and item.color %} · {% endif %}
+                  {% if item.color %}{{ item.color }}{% endif %}
                 </p>
               </div>
+              {# Remove button #}
+              <button
+                class="btn-ghost remove-item-btn"
+                data-item-key="{{ item.key }}"
+                aria-label="Retirer l'article"
+                style="color:var(--c-mauve); flex-shrink:0; margin-top:0.15rem"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between mt-1">
+              {# Qty stepper — inline, slim #}
+              <div style="display:flex; align-items:center; border:1px solid rgba(32,32,48,0.18)">
+                <button
+                  type="button"
+                  class="page-qty-btn"
+                  data-item-key="{{ item.key }}"
+                  data-delta="-1"
+                  style="width:34px; height:34px; border:none; background:none; cursor:pointer; font-size:1rem; color:var(--c-shadow); display:flex; align-items:center; justify-content:center;"
+                  onmouseover="this.style.background='rgba(32,32,48,0.04)'"
+                  onmouseout="this.style.background='none'"
+                >−</button>
+                <span
+                  class="page-qty-display"
+                  data-item-key="{{ item.key }}"
+                  style="width:30px; text-align:center; font-family:var(--font-display); font-style:italic; font-size:1rem; color:var(--c-shadow); border-left:1px solid rgba(32,32,48,0.12); border-right:1px solid rgba(32,32,48,0.12);"
+                >{{ item.qty }}</span>
+                <button
+                  type="button"
+                  class="page-qty-btn"
+                  data-item-key="{{ item.key }}"
+                  data-delta="1"
+                  style="width:34px; height:34px; border:none; background:none; cursor:pointer; font-size:1rem; color:var(--c-shadow); display:flex; align-items:center; justify-content:center;"
+                  onmouseover="this.style.background='rgba(32,32,48,0.04)'"
+                  onmouseout="this.style.background='none'"
+                >+</button>
+              </div>
+
+              <p class="font-display italic text-xl item-line-total" data-price="{{ item.price }}" data-qty="{{ item.qty }}" style="color:var(--c-olive)">
+                {{ (item.price * item.qty)|number_format(2, '.', '') }} DT
+              </p>
             </div>
           </div>
+        </div>
         {% endfor %}
       </div>
 
-      {# ── Order Summary ────────────────────────────────────────── #}
+      {# ── Order summary ────────────────────────────────────────── #}
       <div class="lg:col-span-1">
-        <div class="bg-white/70 p-6 sticky top-24 border border-olive/20">
-          <p class="label mb-4">Résumé</p>
+        <div class="sticky top-24 p-6 border" style="background:rgba(253,250,247,0.7); border-color:rgba(118,128,100,0.18)">
+          <p class="label mb-5">Résumé de commande</p>
 
           <div class="summary-row">
-            <span class="text-sm font-light">Sous-total</span>
-            <span class="font-body text-sm">{{ subtotal }} DT</span>
+            <span class="text-sm font-light">Sous-total
+              <span class="page-item-count" style="color:var(--c-mauve)">
+                ({{ count }} article{{ count > 1 ? 's' : '' }})
+              </span>
+            </span>
+            <span class="font-body text-sm page-subtotal">{{ subtotal|number_format(2, '.', '') }} DT</span>
           </div>
           <div class="summary-row">
             <span class="text-sm font-light">Livraison</span>
-            <span class="text-sm font-light text-mauve">Calculée à l'étape suivante</span>
+            <span class="text-sm font-light" style="color:var(--c-mauve)">Calculée à l'étape suivante</span>
           </div>
           <div class="summary-row total">
             <span>Total</span>
-            <span style="color:var(--c-olive)">{{ subtotal }} DT</span>
+            <span style="color:var(--c-olive)" class="page-subtotal">{{ subtotal|number_format(2, '.', '') }} DT</span>
           </div>
 
           <a href="{{ path('checkout') }}" class="btn-primary w-full justify-center block text-center mt-6">
             Passer la commande
           </a>
-          <a href="{{ path('shop') }}" class="block text-center mt-4 text-xs nav-link">
+          <a href="{{ path('shop') }}" class="block text-center mt-4 nav-link" style="font-size:0.68rem">
             ← Continuer mes achats
           </a>
         </div>
       </div>
+
     </div>
 
   {% else %}
-    {# Empty cart #}
+
     <div class="flex flex-col items-center justify-center py-28 text-center">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="1" class="mb-6" style="color:var(--c-mauve)">
@@ -90,11 +125,121 @@
         <line x1="3" y1="6" x2="21" y2="6"/>
         <path d="M16 10a4 4 0 0 1-8 0"/>
       </svg>
-      <h2 class="font-display italic text-3xl text-shadow/40 mb-3">Votre panier est vide</h2>
-      <p class="text-sm text-mauve font-light mb-8">Parcourez notre collection pour trouver votre ensemble.</p>
+      <h2 class="font-display italic text-3xl mb-3" style="color:rgba(32,32,48,0.35)">Votre panier est vide</h2>
+      <p class="text-sm font-light mb-8" style="color:var(--c-mauve)">Parcourez notre collection pour trouver votre ensemble.</p>
       <a href="{{ path('shop') }}" class="btn-primary">Découvrir la collection</a>
     </div>
+
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+(function () {
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  function toast(msg) {
+    const el = document.querySelector('.toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  function fmt(val) {
+    return parseFloat(val).toFixed(2).replace('.', '.') + ' DT';
+  }
+
+  function recomputeSummary() {
+    let subtotal = 0;
+    let totalQty = 0;
+    document.querySelectorAll('.cart-item[data-item-key]').forEach(row => {
+      const priceEl = row.querySelector('.item-line-total');
+      const price   = parseFloat(priceEl?.dataset.price ?? 0);
+      const qty     = parseInt(priceEl?.dataset.qty     ?? 1);
+      subtotal += price * qty;
+      totalQty += qty;
+      if (priceEl) priceEl.textContent = fmt(price * qty);
+    });
+    document.querySelectorAll('.page-subtotal').forEach(el => el.textContent = fmt(subtotal));
+    const countEl = document.querySelector('.page-item-count');
+    if (countEl) countEl.textContent = `(${totalQty} article${totalQty > 1 ? 's' : ''})`;
+  }
+
+  // ── Remove item ──────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.remove-item-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.dataset.itemKey;
+      const row = document.querySelector(`.cart-item[data-item-key="${key}"]`);
+
+      // Optimistic fade-out
+      if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
+
+      try {
+        const res = await fetch('/cart/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_key: key }),
+        });
+        if (res.ok) {
+          row?.remove();
+          recomputeSummary();
+          document.dispatchEvent(new CustomEvent('cart:updated'));
+          // If cart is now empty, reload so the empty state renders
+          if (!document.querySelector('.cart-item[data-item-key]')) {
+            window.location.reload();
+          }
+        } else {
+          throw new Error();
+        }
+      } catch {
+        if (row) { row.style.opacity = '1'; row.style.pointerEvents = ''; }
+        toast('Erreur — réessayez.');
+      }
+    });
+  });
+
+  // ── Qty stepper ──────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.page-qty-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key      = btn.dataset.itemKey;
+      const delta    = parseInt(btn.dataset.delta);
+      const display  = document.querySelector(`.page-qty-display[data-item-key="${key}"]`);
+      const lineTot  = document.querySelector(`.item-line-total[data-item-key="${key}"]`)
+                    ?? document.querySelector(`.cart-item[data-item-key="${key}"] .item-line-total`);
+
+      if (!display) return;
+      const current = parseInt(display.textContent);
+      const newQty  = Math.max(0, Math.min(10, current + delta));
+
+      // newQty = 0 means remove
+      if (newQty === 0) {
+        document.querySelector(`.remove-item-btn[data-item-key="${key}"]`)?.click();
+        return;
+      }
+
+      display.textContent = newQty;
+      if (lineTot) { lineTot.dataset.qty = newQty; }
+      recomputeSummary();
+
+      try {
+        await fetch('/cart/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_key: key, qty: newQty }),
+        });
+        document.dispatchEvent(new CustomEvent('cart:updated'));
+      } catch {
+        // Silently revert if needed — next page load will correct
+      }
+    });
+  });
+
+})();
+</script>
 {% endblock %}

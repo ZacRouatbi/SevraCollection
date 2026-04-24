@@ -57,8 +57,7 @@ sevra/
 │   │   ├── PasswordResetController.php
 │   │   ├── RegistrationController.php
 │   │   ├── SecurityController.php       # WordPress JWT login
-│   │   ├── ShopController.php
-│   │   └── ... (additional controllers)
+│   │   └── ShopController.php
 │   ├── Security/
 │   │   └── WordPress/                   # JWT authentication integration
 │   │       ├── Authenticator.php
@@ -94,22 +93,21 @@ sevra/
 │   │   │   ├── auth_modal.twig          # Login / Register / Reset (tabbed)
 │   │   │   └── search_modal.twig
 │   │   └── product/product_card.twig
-│   ├── pages/
-│   │   ├── about/index.twig
-│   │   ├── account/index.twig
-│   │   ├── cart/index.twig
-│   │   ├── checkout/index.twig
-│   │   ├── editorial/
-│   │   │   ├── index.twig
-│   │   │   └── show.twig
-│   │   ├── gallery/index.twig           # New Arrivals
-│   │   ├── home/index.twig
-│   │   ├── reset_password/reset_password.twig
-│   │   ├── shop/
-│   │   │   ├── index.twig
-│   │   │   └── product.twig
-│   │   └── ... (additional pages)
-│   └── components/ (organized by type)
+│   └── pages/
+│       ├── about/index.twig
+│       ├── account/index.twig
+│       ├── cart/index.twig
+│       ├── checkout/index.twig
+│       ├── editorial/
+│       │   ├── index.twig
+│       │   └── show.twig
+│       ├── gallery/index.twig           # New Arrivals
+│       ├── home/index.twig
+│       ├── reset_password/reset_password.twig
+│       ├── shop/
+│       │   ├── index.twig
+│       │   └── product.twig
+│       └── ... (additional pages)
 ├── assets/
 │   ├── app.js                           # Stimulus controllers entrypoint
 │   ├── controllers/                     # Stimulus controllers
@@ -373,12 +371,164 @@ docker compose down -v
 
 ---
 
-## Security Notes
+## Security Posture
 
-- `APP_SECRET` must be unique and secret in production.
-- WooCommerce API keys should have **read-only** permissions for public-facing endpoints.
-- JWT tokens are stored in the session; enable HTTPS in production.
-- CSRF protection is enabled for state-changing operations (`csrf_token` Twig function).
+### SQL Injection Protection ✅
+
+No direct database queries exist in this Symfony frontend. All data access occurs through:
+- **WordPress/WooCommerce REST API** via `HttpClient` (parameterized HTTP requests)
+- **Doctrine ORM** with parameterized DQL queries (if local database is used)
+- No raw SQL, `mysqli`, or PDO connections present
+
+**API Service (`src/Service/ApiService.php`):**
+- All WooCommerce endpoints use query parameters and JSON request bodies
+- HTTP client properly encodes parameters via Symfony HttpClient
+- No string concatenation in API URLs
+
+### Input Validation ✅
+
+Strong validation is implemented across all user inputs:
+
+- **Email validation:** `filter_var($email, FILTER_VALIDATE_EMAIL)`
+- **Password complexity:** Minimum 8 chars with uppercase, lowercase, numbers, and special chars
+- **Sanitization:** `trim()` and `strip_tags()` applied to text inputs
+- **Type safety:** `declare(strict_types=1)` with explicit type hints throughout
+
+**Key validation locations:**
+- `src/Controller/RegistrationController.php` — email and password validation
+- `src/Controller/PasswordResetController.php` — token and email validation
+- `src/Controller/AccountController.php` — user data updates
+
+### CSRF Protection ✅
+
+All state-changing operations require CSRF tokens:
+- Registration form
+- Login form
+- Password reset request and update
+- Account update
+- Checkout process
+
+Implementation: `csrf_token('...')` in Twig + `$this->isCsrfTokenValid()` in controllers.
+
+### Authentication & Authorization ✅
+
+- **JWT-based authentication** integrated with WordPress/WooCommerce
+- Custom `WordPress/Authenticator.php` validates JWT tokens
+- Protected routes require `IS_AUTHENTICATED_FULLY` or `IS_AUTHENTICATED_ANONYMOUSLY`
+- Session-based JWT storage with secure cookie configuration
+
+### Password Security ✅
+
+- Passwords validated with strong complexity requirements
+- Password reset tokens generated via `random_bytes(32)` (cryptographically secure)
+- Tokens expire after 1 hour and have rate limiting (3 attempts/hour)
+- Passwords never logged or exposed in error messages
+
+### Error Handling ✅
+
+- Exceptions caught and logged without exposing internal details
+- Generic error messages displayed to users
+- Proper HTTP status codes used (400, 401, 403, 404, 500)
+
+---
+
+## Security Recommendations (Improvements Needed)
+
+### 🔴 High Priority — Reset Token Exposure
+
+**Issue:** Password reset tokens are passed as URL parameters (`/reset-password/{token}`), exposing them in:
+- Browser history
+- Server logs
+- Referer headers when clicking external links
+- Analytics platforms
+
+**Mitigation:**
+- Store reset token in session instead of URL
+- Use POST-only forms with token in hidden field
+- Alternatively: use one-time-use tokens that are immediately invalidated after first access
+
+**Files:** `PasswordResetController::showResetForm()` and `PasswordResetController::update()`
+
+---
+
+### 🟡 Medium Priority — Additional Hardening
+
+1. **Email Uniqueness Pre-Check**
+   - Before calling `register()` API, explicitly check if email already exists using `checkUserExists()`
+   - Currently relies on API response; a pre-check saves a round trip
+
+2. **Rate Limiting on Reset Endpoint**
+   - Rate limiting only applies to token *generation* (3/hour)
+   - The actual password update endpoint (`/reset-password/update`) has no rate limiting
+   - Brute-force attackers could try unlimited passwords against a known token
+
+3. **Password Change Logic**
+   - `AccountService::validatePasswordChange()` allows changing to a new password *without* providing the current password if `currentPassword` is null
+   - Require current password whenever a password change is requested
+
+4. **API Call Ownership Validation**
+   - Some API calls use user-supplied IDs without verifying ownership (e.g., `getCustomer($userId)`)
+   - Validate that the authenticated user matches the requested resource ID
+
+---
+
+### 🟢 Low Priority — Cryptographic hash choice
+
+- MD5 is used for cache keys and non-security purposes (`PasswordResetService::canRequestReset()`, `CartService::getItemKey()`)
+- MD5 is cryptographically broken but acceptable for non-crypto uses (e.g., cache keys, array indexing)
+- Consider SHA-256 for future-proofing if semantic clarity is desired
+
+---
+
+## Current Configuration Security
+
+### `config/packages/security.yaml`
+- ✅ Custom WordPress authenticator properly configured
+- ✅ Logout invalidates session and clears security token
+- ✅ Access control protects `/account/*`, `/checkout`, `/cart/*` routes
+- ⚠️ Remember-me functionality not configured (intentional for this setup)
+
+### `config/packages/framework.yaml`
+- ✅ Session cookie configuration present
+- ⚠️ Consider adding `cookie_secure: auto` (already auto in prod) and `cookie_samesite: lax` (already set)
+
+### `config/packages/csrf.yaml`
+- ✅ CSRF protection enabled with proper token storage
+
+---
+
+## Security Checklist for Production
+
+- [ ] **HTTPS enforced** — Configure web server to redirect HTTP → HTTPS
+- [ ] **Secure cookies** — Set `session.cookie_secure = true` in prod
+- [ ] **HTTP security headers** — Add CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- [ ] **Reset token storage** — Move from URL to session or POST-only
+- [ ] **Rate limit all sensitive endpoints** — Password update, account changes
+- [ ] **Ownership validation** — Verify user owns requested resources
+- [ ] **Log sensitive actions** — Failed login attempts, password changes, account modifications
+- [ ] **Input validation on IDs** — Ensure all numeric IDs are valid integers (`filter_var($id, FILTER_VALIDATE_INT)`)
+- [ ] **Content Security Policy** — Restrict inline scripts and external sources
+
+---
+
+## Dependencies & Supply Chain
+
+Run `composer audit` regularly to check for known vulnerabilities:
+
+```bash
+composer audit
+```
+
+Keep dependencies updated:
+```bash
+composer update --with-dependencies
+```
+
+---
+
+**Overall Security Rating:** ✅ GOOD (with recommended improvements)
+
+The codebase demonstrates solid security practices. Addressing the medium-priority recommendations will bring security to excellent levels.
 
 ---
 

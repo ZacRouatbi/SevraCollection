@@ -79,9 +79,9 @@ class AccountService
             $status  = $response->getStatusCode();
             $content = $response->getContent(false);
 
-            $this->logger->error('WP UPDATE RESPONSE', [
+            $this->logger->debug('WP update profile response', [
                 'status' => $status,
-                'content' => $content,
+                'content_length' => strlen($content),
             ]);
 
             $result = json_decode($content, true);

@@ -1,26 +1,36 @@
 {# templates/components/product/product_card.twig #}
 
-<article class="product-card flex flex-col h-full" data-product-type="{{ product.type ?? '' }}">
+<article class="product-card flex flex-col h-full">
   <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}" class="block overflow-hidden">
-    <div class="overflow-hidden relative aspect-[3/4]"> {# Forced Aspect Ratio #}
+    <div class="overflow-hidden relative aspect-[3/4]">
       <img
         src="{{ product.images[0] ?? '/images/placeholder.jpg' }}"
         alt="{{ product.name ?? 'Ensemble Sevra' }}"
         class="product-card__img w-full h-full object-cover"
         loading="lazy">
 
-      {# Type badge #}
-      {% if product.type is defined %}
-        <span class="absolute top-3 left-3 label bg-linen px-2 py-1"
-              style="background:var(--c-linen);color:var(--c-olive-dark)">
-          {{ product.type == 'pants' ? 'Pantalon' : 'Short' }}
+      {# Dynamic category badge — first category, if any #}
+      {% if product.categories is defined and product.categories|length > 0 %}
+        <span class="absolute top-3 left-3 label px-2 py-1"
+              style="background:var(--c-snow); color:var(--c-olive-dark)">
+          {{ product.categories[0] }}
+        </span>
+      {% endif %}
+
+      {# Sale badge #}
+      {% if product.on_sale is defined and product.on_sale %}
+        <span class="absolute top-3 right-3 label px-2 py-1"
+              style="background:var(--c-shadow); color:var(--c-snow)">
+          Soldes
         </span>
       {% endif %}
 
       {# Quick-add overlay on hover #}
-      <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-shadow/30 to-transparent">
+      <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 hover:opacity-100 transition-opacity duration-300"
+           style="background:linear-gradient(to top, rgba(32,32,48,0.35) 0%, transparent 55%)">
         <button
-          class="btn-primary text-xs py-2.5 px-5"
+          class="btn-primary"
+          style="font-size:0.68rem; padding:0.65rem 1.4rem"
           data-quick-add="{{ product.id ?? '' }}"
           onclick="event.preventDefault(); event.stopPropagation();">
           Ajouter au panier
@@ -29,13 +39,20 @@
     </div>
   </a>
 
-  {# The Body now grows to fill the remaining height #}
   <div class="product-card__body flex flex-col flex-grow pt-4">
-    <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}" class="hover:opacity-70 transition-opacity flex-grow">
-      <h3 class="product-card__name">{{ product.name ?? 'Ensemble Laine' }}</h3>
+    <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}"
+       class="hover:opacity-70 transition-opacity flex-grow">
+      <h3 class="product-card__name">{{ product.name ?? 'Ensemble en Lin' }}</h3>
     </a>
-    <p class="product-card__price mt-auto pt-1">
-      {{ product.price is defined ? product.price ~ ' DT' : '— DT' }}
-    </p>
+    <div class="flex items-center justify-between mt-auto pt-1">
+      <p class="product-card__price">
+        {% if product.on_sale is defined and product.on_sale and product.sale_price is defined %}
+          <span style="color:var(--c-shadow)">{{ product.sale_price }} DT</span>
+          <span style="font-size:0.75rem; color:var(--c-mauve); text-decoration:line-through; margin-left:0.35rem">{{ product.regular_price }} DT</span>
+        {% else %}
+          {{ product.price is defined ? product.price ~ ' DT' : '— DT' }}
+        {% endif %}
+      </p>
+    </div>
   </div>
 </article>

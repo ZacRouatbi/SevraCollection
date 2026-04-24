@@ -28,6 +28,26 @@ cart:
     path: /cart
     controller: App\Controller\CartController::index
 
+cart_add:
+    path: /cart/add
+    controller: App\Controller\CartController::add
+    methods: [POST]
+
+cart_remove:
+    path: /cart/remove
+    controller: App\Controller\CartController::remove
+    methods: [POST]
+
+cart_update:
+    path: /cart/update
+    controller: App\Controller\CartController::update
+    methods: [POST]
+
+cart_state:
+    path: /cart/state
+    controller: App\Controller\CartController::state
+    methods: [GET]
+
 account:
     path: /account
     controller: App\Controller\AccountController::index
@@ -39,10 +59,6 @@ account_update:
 register:
     path: /register
     controller: App\Controller\RegistrationController::register
-
-# BUG FIX #1 (routes): The original had a 'reset_password' route pointing to
-# HomeController::index. That route is never needed — the controller
-# redirect happens internally. Keeping it caused ambiguity. Removed.
 
 checkout:
     path: /checkout
@@ -68,6 +84,7 @@ reset_password_request:
     path: /reset-password/request
     controller: App\Controller\PasswordResetController::request
     methods: [POST]
+
 reset_password_update:
     path: /reset-password/update
     controller: App\Controller\PasswordResetController::update
@@ -77,3 +94,7 @@ reset_password_form:
     path: /reset-password/{token}
     controller: App\Controller\PasswordResetController::showResetForm
     methods: [GET]
+
+product_detail:
+    path: /produit/{slug}
+    controller: App\Controller\ProductController::show
