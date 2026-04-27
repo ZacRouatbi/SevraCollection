@@ -293,4 +293,54 @@ public function getCategories(): array
             return null;
         }
     }
+    /**
+ * Returns up to $limit published products with the lowest stock,
+ * excluding out-of-stock items. Sorted by stock_quantity ASC.
+ *
+ * @param int $limit Maximum number of products to return (default 5)
+ * @return array
+ */
+public function getLowStockProducts(int $limit = 5): array
+{
+    try {
+        $response = $this->client->request(
+            'GET',
+            rtrim($this->wpUrl, '/') . '/wp-json/wc/v3/products',
+            [
+                'auth_basic' => [$this->wcKey, $this->wcSecret],
+                'query'      => [
+                    'per_page' => 100,            // fetch enough to sort locally
+                    'status'   => 'publish',
+                    'stock_status' => 'instock',  // only products currently in stock
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            $this->logger->error('WooCommerce low stock API error', [
+                'status' => $response->getStatusCode(),
+            ]);
+            return [];
+        }
+
+        $products = $response->toArray();
+
+    } catch (TransportExceptionInterface $e) {
+        $this->logger->error('WooCommerce low stock transport error', ['error' => $e->getMessage()]);
+        return [];
+    }
+
+    // Filter out any that slipped through without a stock_quantity
+    $products = array_filter($products, fn($p) => isset($p['stock_quantity']));
+
+    // Sort by stock_quantity ascending (lowest first)
+    usort($products, fn($a, $b) => ($a['stock_quantity'] ?? 0) <=> ($b['stock_quantity'] ?? 0));
+
+    // Slice to the requested limit
+    $products = array_slice($products, 0, $limit);
+
+    // Normalize for the templates
+    return array_map(fn(array $p) => $this->normalize($p), $products);
+}
 }

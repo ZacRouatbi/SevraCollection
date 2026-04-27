@@ -76,26 +76,21 @@
       <span class="label mb-2 block">Sélection</span>
       <h2 class="text-display">Pièces phares</h2>
     </div>
-    <a href="{{ path('shop') }}" class="btn-ghost flex items-center gap-2 nav-link" style="color:var(--c-olive)">
-      Tout voir
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <line x1="5" y1="12" x2="19" y2="12"/>
-        <polyline points="12 5 19 12 12 19"/>
-      </svg>
-    </a>
   </div>
 
-  {% if featured_products is defined and featured_products is not empty %}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-      {% for product in featured_products %}
+  {% set total_slots = 4 %}
+  {% set real_products = featured_products is defined ? featured_products : [] %}
+  {% set real_count = real_products|length %}
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+    {% for i in 1..total_slots %}
+      {% if i <= real_count %}
+        {# Real product #}
         <div class="flex flex-col">
-          {% include 'components/product/product_card.twig' with { product: product } %}
+          {% include 'components/product/product_card.twig' with { product: real_products[i - 1] } %}
         </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 items-stretch">
-      {% for i in 1..4 %}
+      {% else %}
+        {# Placeholder skeleton card #}
         <div class="flex flex-col h-full">
           <article class="product-card animate-pulse flex flex-col h-full">
             <div class="relative w-full mb-4 shrink-0 aspect-[3/4]" style="background:rgba(118,128,100,0.10)"></div>
@@ -109,9 +104,9 @@
             </div>
           </article>
         </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
 </section>
 
 {# ═══ WHY SEVRA ════════════════════════════════════════════════ #}
@@ -137,7 +132,6 @@
     </div>
   </div>
 </section>
-
 {# ═══ NEW ARRIVALS TEASER ══════════════════════════════════════ #}
 <section class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
   <div class="flex items-end justify-between mb-10">
@@ -146,27 +140,53 @@
       <h2 class="text-display">Dernières arrivées</h2>
     </div>
     <a href="{{ path('gallery') }}" class="btn-ghost flex items-center gap-2 nav-link" style="color:var(--c-olive)">
-      Galerie complète
+      Voir plus
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <line x1="5" y1="12" x2="19" y2="12"/>
         <polyline points="12 5 19 12 12 19"/>
       </svg>
     </a>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    {% for i in 1..3 %}
-      <div class="gallery-item relative group overflow-hidden">
-        <div class="aspect-[3/4] flex items-center justify-center"
-             style="background: linear-gradient(135deg, rgba(118,128,100,0.12), rgba(148,132,155,0.08))">
-          <p class="font-display italic text-2xl" style="color:rgba(118,128,100,0.25)">Photo {{ i }}</p>
+
+  {% if latest_arrivals is defined and latest_arrivals is not empty %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {% for item in latest_arrivals %}
+        <a href="{{ path('product_detail', { slug: item.slug }) }}" class="gallery-item relative group overflow-hidden">
+          <img
+            src="{{ item.images[0] ?? '/images/placeholder.jpg' }}"
+            alt="{{ item.name }}"
+            class="w-full aspect-[3/4] object-cover"
+          >
+          <div class="absolute inset-0 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+               style="background: linear-gradient(to top, rgba(32,32,48,0.6), transparent)">
+            <div>
+              <p class="label mb-1" style="color:rgba(242,229,217,0.65)">
+                {{ item.type == 'pants' ? 'Pantalon' : (item.type == 'shorts' ? 'Short' : 'Pièce') }}
+              </p>
+              <p class="font-display italic text-2xl" style="color:var(--c-linen)">{{ item.name }}</p>
+              <p class="text-sm font-light mt-1" style="color:rgba(242,229,217,0.7)">{{ item.price }} DT</p>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    {# Optional: fallback to static placeholders if no data #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {% for i in 1..3 %}
+        <div class="gallery-item relative group overflow-hidden">
+          <div class="aspect-[3/4] flex items-center justify-center"
+               style="background: linear-gradient(135deg, rgba(118,128,100,0.12), rgba(148,132,155,0.08))">
+            <p class="font-display italic text-2xl" style="color:rgba(118,128,100,0.25)">Photo {{ i }}</p>
+          </div>
+          <div class="absolute inset-0 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+               style="background: linear-gradient(to top, rgba(32,32,48,0.6), transparent)">
+            <p class="font-display italic text-xl" style="color:var(--c-snow)">Nouvelle pièce</p>
+          </div>
         </div>
-        <div class="absolute inset-0 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-             style="background: linear-gradient(to top, rgba(32,32,48,0.6), transparent)">
-          <p class="font-display italic text-xl" style="color:var(--c-snow)">Nouvelle pièce</p>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 </section>
 
 <style>
