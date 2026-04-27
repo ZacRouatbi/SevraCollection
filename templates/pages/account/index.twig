@@ -4,11 +4,11 @@
 {% block title %}Mon compte — Sevra{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-6 lg:px-10 py-12">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
 
-  <div class="mb-10">
+  <div class="mb-8 lg:mb-10">
     <span class="label mb-2 block">Espace personnel</span>
-    <h1 class="text-display">
+    <h1 class="text-display text-3xl sm:text-4xl lg:text-5xl">
       {% if user is not null %}
         Bonjour, <em>{{ user.first_name ?? 'vous' }}.</em>
       {% else %}
@@ -17,11 +17,12 @@
     </h1>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
 
-    {# ── Sidebar nav ─────────────────────────────────────────── #}
+    {# ── Sidebar (mobile friendly horizontal scroll) ─────────── #}
     <aside class="lg:col-span-1">
-      <nav class="space-y-1 sticky top-24">
+      <nav class="flex lg:flex-col gap-2 lg:gap-1 overflow-x-auto pb-2 lg:pb-0 lg:sticky lg:top-24"
+           id="account-nav">
         {% set sections = [
           { id: 'info',   label: 'Mes informations' },
           { id: 'orders', label: 'Mes commandes' },
@@ -30,17 +31,14 @@
         {% for s in sections %}
           {% if s.url is defined %}
             <a href="{{ s.url }}"
-               class="flex items-center gap-3 px-4 py-3 text-sm font-body font-light
-                      text-shadow/50 hover:text-olive transition-colors">
+               class="flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                      text-shadow/50 hover:text-olive transition-colors whitespace-nowrap">
               <span>{{ s.label }}</span>
             </a>
           {% else %}
-            <button onclick="document.querySelectorAll('.account-section').forEach(el=>el.classList.add('hidden'));
-                             document.getElementById('section-{{ s.id }}').classList.remove('hidden');
-                             document.querySelectorAll('.acc-nav-btn').forEach(b=>b.classList.remove('text-olive','border-l-2','border-olive'));
-                             this.classList.add('text-olive','border-l-2','border-olive');"
-                    class="acc-nav-btn w-full text-left flex items-center gap-3 px-4 py-3 text-sm font-body font-light
-                           text-shadow/50 hover:text-olive transition-colors
+            <button data-target="section-{{ s.id }}"
+                    class="acc-nav-btn flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                           text-shadow/50 hover:text-olive transition-colors whitespace-nowrap
                            {% if loop.first %}text-olive border-l-2 border-olive{% endif %}">
               {{ s.label }}
             </button>
@@ -50,14 +48,14 @@
     </aside>
 
     {# ── Content ─────────────────────────────────────────────── #}
-    <div class="lg:col-span-2 space-y-8">
+    <div class="lg:col-span-2">
 
       {# ─ SECTION: Informations ─────────────────────────────── #}
       <section id="section-info" class="account-section">
-        <p class="font-display italic text-2xl mb-6">Mes informations</p>
+        <p class="font-display italic text-xl sm:text-2xl mb-6">Mes informations</p>
 
         <form method="POST" action="{{ path('account_update') }}" class="space-y-5">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('account_update') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('account_update') }}">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="input-label" for="acc-first">Prénom</label>
@@ -84,7 +82,7 @@
           </div>
 
           <div class="border-t border-olive/15 pt-5">
-            <p class="font-display italic text-lg mb-4 text-shadow">Adresse de livraison par défaut</p>
+            <p class="font-display italic text-base lg:text-lg mb-4 text-shadow">Adresse de livraison par défaut</p>
             <div class="space-y-4">
               <div>
                 <label class="input-label" for="acc-addr">Adresse</label>
@@ -107,7 +105,7 @@
           </div>
 
           <div class="border-t border-olive/15 pt-5">
-            <p class="font-display italic text-lg mb-4 text-shadow">Changer le mot de passe</p>
+            <p class="font-display italic text-base lg:text-lg mb-4 text-shadow">Changer le mot de passe</p>
             <div class="space-y-4">
               <div>
                 <label class="input-label" for="acc-pw-current">Mot de passe actuel</label>
@@ -129,74 +127,192 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-primary">Enregistrer les modifications</button>
+          <button type="submit" class="btn-primary w-full sm:w-auto">Enregistrer les modifications</button>
         </form>
       </section>
 
-      {# ─ SECTION: Orders ───────────────────────────────────── #}
+      {# ─ SECTION: Orders (with pagination) ───────────────────── #}
       <section id="section-orders" class="account-section hidden">
-  <p class="font-display italic text-2xl mb-6">Mes commandes</p>
+        <p class="font-display italic text-xl sm:text-2xl mb-6">Mes commandes</p>
 
-  {% if orders is not empty %}
-    <div class="space-y-6">
-      {% for order in orders %}
-        <div class="bg-white/60 border border-olive/10">
-          {# Order header #}
-          <div class="p-5 flex items-center justify-between">
-            <div>
-              <p class="font-display italic text-lg">Commande #{{ order.number }}</p>
-              <p class="text-xs text-mauve font-light mt-0.5">
-                {{ order.date is defined ? order.date|date('d/m/Y') : '' }}
-              </p>
-            </div>
-            <span class="label px-3 py-1"
-                  style="background:var(--c-linen-deep);
-                         color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
-              {{ order.status ?? 'En cours' }}
-            </span>
-          </div>
-
-          {# Line items #}
-          {% if order.items is defined and order.items is not empty %}
-            <div class="border-t border-shadow/8 px-5 py-3 space-y-3">
-              {% for item in order.items %}
-                <div class="flex items-center gap-4">
-                  <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
-                       class="w-16 h-20 object-cover flex-shrink-0 border border-shadow/10">
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium text-sm text-shadow">{{ item.name }}</p>
-                    <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
+        {% if orders is not empty %}
+          <div id="orders-container" data-page-size="5">
+            {% for order in orders %}
+              <div class="order-item bg-white/60 border border-olive/10 mb-4 last:mb-0">
+                {# Order header #}
+                <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <p class="font-display italic text-base sm:text-lg">Commande #{{ order.number }}</p>
+                    <p class="text-xs text-mauve font-light mt-0.5">
+                      {{ order.date is defined ? order.date|date('d/m/Y') : '' }}
+                    </p>
                   </div>
-                  <p class="text-sm font-display italic text-olive">
-                    {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
+                  <span class="label px-3 py-1 self-start sm:self-auto text-xs"
+                        style="background:var(--c-linen-deep);
+                               color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
+                    {{ order.status ?? 'En cours' }}
+                  </span>
+                </div>
+
+                {# Line items #}
+                {% if order.items is defined and order.items is not empty %}
+                  <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">
+                    {% for item in order.items %}
+                      <div class="flex items-center gap-3 sm:gap-4">
+                        <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
+                             class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
+                        <div class="flex-1 min-w-0">
+                          <p class="font-medium text-sm text-shadow truncate">{{ item.name }}</p>
+                          <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
+                        </div>
+                        <p class="text-sm font-display italic text-olive whitespace-nowrap">
+                          {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
+                        </p>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {# Order footer #}
+                <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <p class="text-sm font-light text-shadow/60">
+                    {{ order.items|default([])|length }} article(s)
+                  </p>
+                  <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
+                    {{ order.total }} DT
                   </p>
                 </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-
-          {# Order footer (total) #}
-          <div class="border-t border-shadow/8 px-5 py-3 flex justify-between items-center">
-            <p class="text-sm font-light text-shadow/60">
-              {{ order.items_count ?? order.items|length }} article(s)
-            </p>
-            <p class="font-display italic text-lg" style="color:var(--c-olive)">
-              {{ order.total }} DT
-            </p>
+              </div>
+            {% endfor %}
           </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="flex flex-col items-center justify-center py-16 text-center">
-      <p class="font-display italic text-2xl text-shadow/30 mb-2">Aucune commande</p>
-      <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
-      <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
-    </div>
-  {% endif %}
-</section>
+
+          {# Pagination controls #}
+          <div id="orders-pagination" class="flex justify-center items-center gap-2 mt-6"></div>
+
+        {% else %}
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <p class="font-display italic text-xl sm:text-2xl text-shadow/30 mb-2">Aucune commande</p>
+            <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
+            <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
+          </div>
+        {% endif %}
+      </section>
 
     </div>
   </div>
 </div>
+
+{# ── Pagination & tab switching script ─────────────── #}
+<script>
+  (function() {
+    // ── Tab switching ──────────────────────────────────────
+    const nav = document.getElementById('account-nav');
+    if (nav) {
+      nav.addEventListener('click', (e) => {
+        const btn = e.target.closest('.acc-nav-btn');
+        if (!btn) return;
+        e.preventDefault();
+
+        const targetId = btn.dataset.target;
+        if (!targetId) return;
+
+        // Hide all sections
+        document.querySelectorAll('.account-section').forEach(s => s.classList.add('hidden'));
+        // Show target
+        document.getElementById(targetId).classList.remove('hidden');
+
+        // Update active button styles
+        document.querySelectorAll('.acc-nav-btn').forEach(b => {
+          b.classList.remove('text-olive', 'border-l-2', 'border-olive');
+        });
+        btn.classList.add('text-olive', 'border-l-2', 'border-olive');
+
+        // If orders section shown, init pagination
+        if (targetId === 'section-orders') {
+          initOrdersPagination();
+        }
+      });
+    }
+
+    // ── Client‑side pagination for orders ──────────────────
+    function initOrdersPagination() {
+      const container = document.getElementById('orders-container');
+      const paginationDiv = document.getElementById('orders-pagination');
+      if (!container || !paginationDiv) return;
+
+      const pageSize = parseInt(container.dataset.pageSize) || 5;
+      const orderItems = Array.from(container.querySelectorAll('.order-item'));
+      if (orderItems.length === 0) return;
+
+      // Show first page, hide rest
+      const totalPages = Math.ceil(orderItems.length / pageSize);
+      let currentPage = 1;
+
+      function showPage(page) {
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        orderItems.forEach((item, idx) => {
+          item.style.display = (idx >= start && idx < end) ? '' : 'none';
+        });
+      }
+
+      function renderPaginationButtons() {
+        paginationDiv.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        // Prev button
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '←';
+        prevBtn.className = 'px-3 py-1 text-sm border border-olive/30 text-olive hover:bg-olive/10 disabled:opacity-40';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+            renderPaginationButtons();
+          }
+        });
+        paginationDiv.appendChild(prevBtn);
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+          const pageBtn = document.createElement('button');
+          pageBtn.textContent = i;
+          pageBtn.className = 'px-3 py-1 text-sm border border-olive/20 hover:bg-olive/10';
+          if (i === currentPage) {
+            pageBtn.classList.add('bg-olive', 'text-white', 'border-olive');
+          }
+          pageBtn.addEventListener('click', () => {
+            currentPage = i;
+            showPage(i);
+            renderPaginationButtons();
+          });
+          paginationDiv.appendChild(pageBtn);
+        }
+
+        // Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→';
+        nextBtn.className = 'px-3 py-1 text-sm border border-olive/30 text-olive hover:bg-olive/10 disabled:opacity-40';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+            renderPaginationButtons();
+          }
+        });
+        paginationDiv.appendChild(nextBtn);
+      }
+
+      showPage(1);
+      renderPaginationButtons();
+    }
+
+    // If orders section is already visible on page load (maybe after refresh)
+    if (document.getElementById('section-orders') && !document.getElementById('section-orders').classList.contains('hidden')) {
+      initOrdersPagination();
+    }
+  })();
+</script>
 {% endblock %}
