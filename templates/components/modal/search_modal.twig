@@ -3,25 +3,137 @@
      style="opacity:0; visibility:hidden; pointer-events:none; background-color: rgba(253,250,247,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);">
 
     <div class="relative w-full max-w-3xl" id="search-content">
-        {# Close Button - Adjusted top position for mobile so it stays reachable #}
+        {# Close Button #}
         <button id="search-close" class="absolute -top-12 md:-top-16 right-0 text-shadow hover:rotate-90 transition-transform duration-300">
             <svg width="28" height="28" class="md:w-8 md:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
         </button>
 
-        {# Input - Scaled from 2xl on mobile to your original 5xl on desktop #}
-        <input type="text" id="search-input" placeholder="Que recherchez-vous ?"
+        {# Search Input #}
+        <input type="text" id="search-input" placeholder="Que recherchez-vous ?" autocomplete="off"
                class="w-full bg-transparent text-2xl md:text-5xl font-display italic text-shadow border-b border-shadow/10 outline-none pb-4 placeholder:text-shadow/20">
 
-        {# Suggestions - Adjusted margin and gap for smaller screens #}
-        <div class="mt-8 md:mt-12 flex flex-wrap gap-2 md:gap-4">
-            <p class="w-full label text-shadow/40 mb-2">Suggestions</p>
-            {% for term in ['Ensemble Lin', 'Nouveautés', 'Accessoires'] %}
-                <button class="px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm">
-                    {{ term }}
-                </button>
-            {% endfor %}
+        {# Results dropdown – now matches overlay background #}
+        <div id="search-results" class="hidden mt-4 max-h-[60vh] overflow-y-auto rounded-sm shadow-2xl border border-olive/10"
+             style="background: rgba(253,250,247,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
         </div>
+
+
     </div>
 </div>
+
+<script>
+  (function() {
+    const overlay    = document.getElementById('search-overlay');
+    const input      = document.getElementById('search-input');
+    const resultsDiv = document.getElementById('search-results');
+    const closeBtn   = document.getElementById('search-close');
+
+    let debounceTimer;
+
+    // ── Open / Close logic ──────────────────────────────────
+    function resetSearch() {
+      input.value = '';
+      resultsDiv.innerHTML = '';
+      resultsDiv.classList.add('hidden');
+    }
+
+    window.openSearch = function() {
+      overlay.style.opacity = '1';
+      overlay.style.visibility = 'visible';
+      overlay.style.pointerEvents = 'auto';
+      resetSearch();
+      input.focus();
+    };
+
+    function closeSearch() {
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      overlay.style.pointerEvents = 'none';
+      resetSearch();
+    }
+
+    closeBtn.addEventListener('click', closeSearch);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeSearch();
+    });
+
+    // ── Load categories (cached via server) ─────────────────
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const categories = await res.json();
+        renderSuggestions(categories);
+      } catch (err) {
+        // Fallback if API fails
+        renderSuggestions([
+          { name: 'Ensemble Lin', slug: 'ensemble-lin' },
+          { name: 'Nouveautés',   slug: 'nouveautes' }
+        ]);
+      }
+    }
+
+    function renderSuggestions(categories) {
+      if (!categories || categories.length === 0) {
+        suggestionsDiv.innerHTML = '';
+        return;
+      }
+      suggestionsDiv.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm';
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => {
+          window.location.href = '/shop?category=' + encodeURIComponent(cat.slug);
+        });
+        suggestionsDiv.appendChild(btn);
+      });
+      categoriesLoaded = true;
+    }
+
+    // ── Live search with debounce ───────────────────────────
+    input.addEventListener('input', function() {
+      const query = this.value.trim();
+      clearTimeout(debounceTimer);
+
+      if (query.length < 2) {
+        resultsDiv.innerHTML = '';
+        resultsDiv.classList.add('hidden');
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+          const products = await res.json();
+          if (products.length === 0) {
+            resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-mauve">Aucun résultat</div>';
+          } else {
+            resultsDiv.innerHTML = products.map(p => `
+              <a href="/produit/${p.slug}" class="flex items-center gap-4 p-3 hover:bg-white/30 transition-colors border-b border-shadow/5 last:border-0">
+                <img src="${p.image}" alt="${p.name}" class="w-12 h-16 object-cover flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-display italic text-sm text-shadow">${p.name}</p>
+                  <p class="text-xs text-mauve">${p.price} DT</p>
+                </div>
+              </a>
+            `).join('');
+          }
+          resultsDiv.classList.remove('hidden');
+        } catch (err) {
+          resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-red-400">Erreur de recherche</div>';
+          resultsDiv.classList.remove('hidden');
+        }
+      }, 300);
+    });
+
+    // Close when pressing Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.style.visibility === 'visible') {
+        closeSearch();
+      }
+    });
+  })();
+</script>

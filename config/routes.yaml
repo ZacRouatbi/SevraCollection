@@ -97,3 +97,8 @@ reset_password_form:
 product_detail:
     path: /produit/{slug}
     controller: App\Controller\ProductController::show
+
+api_search:
+    path: /api/search
+    controller: App\Controller\SearchController::search
+    methods: [GET]
