@@ -484,4 +484,70 @@ public function getOrdersByCustomer(int $customerId): array
         return [];
     }
 }
+/**
+ * Fetch a page of orders for a customer from WooCommerce API.
+ * Returns an array with 'orders' and 'total_count' (if available).
+ */
+public function getOrdersByCustomerPaginated(int $customerId, int $page = 1, int $perPage = 10): array
+{
+    try {
+        $response = $this->client->request('GET', rtrim($this->wpUrl, '/') . '/wp-json/wc/v3/orders', [
+            'auth_basic' => [$this->wcKey, $this->wcSecret],
+            'query'      => [
+                'customer' => $customerId,
+                'per_page' => $perPage,
+                'page'     => $page,
+                'order'    => 'desc',
+            ],
+            'timeout' => 15,
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            return ['orders' => [], 'total_count' => 0];
+        }
+
+        $totalCount = (int)($response->getHeaders()['x-wp-total'][0] ?? 0);
+        $orders = $response->toArray();
+
+        // Enrich with product images (same as before)
+        foreach ($orders as &$order) {
+            foreach ($order['line_items'] as &$item) {
+                $productId = $item['product_id'] ?? 0;
+                if ($productId) {
+                    $product = $this->getProductById($productId);
+                    $item['image'] = $product['images'][0] ?? $product['gallery'][0] ?? null;
+                } else {
+                    $item['image'] = null;
+                }
+            }
+        }
+
+        // Map to simpler structure
+        $orders = array_map(function ($o) {
+            return [
+                'number' => $o['number'],
+                'date'   =>  !empty($o['date_created']) ? $o['date_created'] : null,
+                'status' => $o['status'],
+                'total'  => $o['total'],
+                'items'  => array_map(function ($i) {
+                    return [
+                        'name'     => $i['name'],
+                        'quantity' => $i['quantity'],
+                        'price'    => $i['price'],
+                        'image'    => $i['image'] ?? '/images/placeholder.jpg',
+                    ];
+                }, $o['line_items']),
+            ];
+        }, $orders);
+
+        return [
+            'orders'      => $orders,
+            'total_count' => $totalCount,
+        ];
+
+    } catch (\Throwable $e) {
+        $this->logger->error('getOrdersByCustomerPaginated failed: ' . $e->getMessage());
+        return ['orders' => [], 'total_count' => 0];
+    }
+}
 }

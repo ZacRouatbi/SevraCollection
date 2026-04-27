@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\AccountService;
+use App\Service\WooCommerceService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,27 +17,51 @@ class AccountController extends AbstractController
     public function __construct(
         private readonly AccountService $accountService,
         private readonly LoggerInterface $logger,
+        private readonly WooCommerceService $wooCommerceService,
     ) {}
 
-    public function index(Request $request): Response
-    {
-        $wpUser = $this->getAuthenticatedWpUser();
+    #[Route('/account', name: 'account')]
+public function index(Request $request): Response
+{
+    $wpUser = $this->getAuthenticatedWpUser();
+    $session = $request->getSession()->all();
 
-        $session  = $request->getSession();
-        $bag      = $session->all();
+    $profile = $this->accountService->getUserProfile($wpUser['id'], $session);
 
-        $profile = $this->accountService->getUserProfile($wpUser['id'], $bag);
-        $orders  = $this->accountService->getUserOrders($wpUser['id'],  $bag);
+    // Determine if AJAX request for orders
+    if ($request->isXmlHttpRequest()) {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $perPage = 5; // or 5, whatever fits your design
 
-        foreach ($bag as $k => $v) {
-            $session->set($k, $v);
-        }
+        $result = $this->wooCommerceService->getOrdersByCustomerPaginated($wpUser['id'], $page, $perPage);
 
-        return $this->render('pages/account/index.twig', [
-            'user'   => $profile,
-            'orders' => $orders,
+        // Return JSON
+        return $this->json([
+            'orders'      => $result['orders'],
+            'total_count' => $result['total_count'],
+            'page'        => $page,
+            'per_page'    => $perPage,
+            'has_more'    => ($page * $perPage) < $result['total_count'],
         ]);
     }
+
+    // Normal page load: fetch first page
+   $firstPage = $this->wooCommerceService->getOrdersByCustomerPaginated($wpUser['id'], 1, 5);
+    $orders = $firstPage['orders'];
+    $totalOrders = $firstPage['total_count'];
+
+    // Write back session updates
+    foreach ($session as $k => $v) {
+        $request->getSession()->set($k, $v);
+    }
+
+    return $this->render('pages/account/index.twig', [
+        'user'         => $profile,
+        'orders'       => $orders,
+        'total_orders' => $totalOrders,
+        'per_page'     => 5,
+    ]);
+}
 
     public function update(Request $request): Response
     {
