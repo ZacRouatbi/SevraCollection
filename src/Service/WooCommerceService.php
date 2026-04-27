@@ -71,6 +71,7 @@ class WooCommerceService
         }
 
         return [
+            'id'     => $p['id'] ?? 0,
             'slug'   => $p['slug'] ?? '',
             'name'   => $p['name'] ?? '',
             'price'  => $p['price'] ?? '',
