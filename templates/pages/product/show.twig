@@ -61,45 +61,27 @@
 
       {# ── LEFT: Image gallery ────────────────────────────────────── #}
       <div class="flex gap-4">
-
-        {# Thumbnail rail — hidden if only 1 image #}
         {% if product.gallery|length > 1 %}
         <div class="thumb-rail hidden sm:flex" id="thumb-rail">
           {% for img in product.gallery %}
-            <button
-              class="{% if loop.first %}active{% endif %}"
-              data-src="{{ img }}"
-              aria-label="Vue {{ loop.index }}"
-            >
+            <button class="{% if loop.first %}active{% endif %}" data-src="{{ img }}" aria-label="Vue {{ loop.index }}">
               <img src="{{ img }}" alt="{{ product.name }} vue {{ loop.index }}" loading="lazy">
             </button>
           {% endfor %}
         </div>
         {% endif %}
 
-        {# Main image #}
         <div class="flex-1 relative overflow-hidden" style="background:var(--c-white)">
-          <img
-            id="main-image"
-            src="{{ product.gallery[0] ?? '/images/placeholder.jpg' }}"
-            alt="{{ product.name }}"
-            class="w-full"
-            style="aspect-ratio:3/4; object-fit:cover; display:block;"
-            loading="eager"
-          >
+          <img id="main-image" src="{{ product.gallery[0] ?? '/images/placeholder.jpg' }}" alt="{{ product.name }}" class="w-full" style="aspect-ratio:3/4; object-fit:cover; display:block;" loading="eager">
 
-          {# Sale badge #}
           {% if product.on_sale and product.sale_price %}
-            <div class="absolute top-4 left-4"
-                 style="background:var(--c-shadow); color:var(--c-snow); padding:0.35rem 0.8rem; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase">
+            <div class="absolute top-4 left-4" style="background:var(--c-shadow); color:var(--c-snow); padding:0.35rem 0.8rem; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase">
               Soldes
             </div>
           {% endif %}
 
-          {# Out of stock overlay #}
           {% if product.stock_status != 'instock' %}
-            <div class="absolute inset-0 flex items-center justify-center"
-                 style="background:rgba(250,238,232,0.72); backdrop-filter:blur(2px)">
+            <div class="absolute inset-0 flex items-center justify-center" style="background:rgba(250,238,232,0.72); backdrop-filter:blur(2px)">
               <span class="label" style="color:var(--c-shadow); letter-spacing:0.25em">Épuisé</span>
             </div>
           {% endif %}
@@ -108,207 +90,102 @@
 
       {# ── RIGHT: Product info ─────────────────────────────────────── #}
       <div class="product-info-sticky">
-
-        {# Category + label #}
         <div class="flex items-center gap-3 mb-4">
-          {% if product.categories %}
-            <span class="label">{{ product.categories|join(' · ') }}</span>
-          {% endif %}
-          {% if product.on_sale %}
-            <span class="label" style="color:var(--c-mauve)">En promotion</span>
-          {% endif %}
+          {% if product.categories %}<span class="label">{{ product.categories|join(' · ') }}</span>{% endif %}
+          {% if product.on_sale %}<span class="label" style="color:var(--c-mauve)">En promotion</span>{% endif %}
         </div>
 
-        {# Name #}
         <h1 class="text-display mb-2" style="line-height:1.05">{{ product.name }}</h1>
-
-        {# Divider #}
         <span class="divider-olive"></span>
 
-        {# Price #}
         <div class="flex items-baseline gap-3 mb-5">
           {% if product.on_sale and product.sale_price %}
-            <span style="font-family:var(--font-display); font-style:italic; font-size:1.75rem; color:var(--c-shadow)">
-              {{ product.sale_price }} DT
-            </span>
-            <span style="font-size:1rem; font-weight:300; color:var(--c-mauve); text-decoration:line-through">
-              {{ product.regular_price }} DT
-            </span>
+            <span style="font-family:var(--font-display); font-style:italic; font-size:1.75rem; color:var(--c-shadow)">{{ product.sale_price }} DT</span>
+            <span style="font-size:1rem; font-weight:300; color:var(--c-mauve); text-decoration:line-through">{{ product.regular_price }} DT</span>
           {% else %}
-            <span style="font-family:var(--font-display); font-style:italic; font-size:1.75rem; color:var(--c-shadow)">
-              {{ product.regular_price ?: product.price }} DT
-            </span>
+            <span style="font-family:var(--font-display); font-style:italic; font-size:1.75rem; color:var(--c-shadow)">{{ product.regular_price ?: product.price }} DT</span>
           {% endif %}
         </div>
 
-        {# ── Dynamic description ─────────────────────────────────── #}
         {% set desc = product.short_description ?: product.description %}
         {% if desc %}
-          <p class="mb-8" style="font-size:0.9rem; font-weight:300; line-height:1.85; color:rgba(32,32,48,0.68); font-family:var(--font-body)">
-            {{ desc|striptags }}
-          </p>
+          <p class="mb-8" style="font-size:0.9rem; font-weight:300; line-height:1.85; color:rgba(32,32,48,0.68); font-family:var(--font-body)">{{ desc|striptags }}</p>
         {% endif %}
 
-        {# ── Size selector ──────────────────────────────────────── #}
+        {# Size selector #}
         {% if product.sizes %}
         <div class="mb-6">
           <div class="flex items-center justify-between mb-3">
             <span class="label">Taille</span>
-            <button class="btn-ghost" style="font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--c-olive)">
-              Guide des tailles
-            </button>
+            <button class="btn-ghost" style="font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--c-olive)">Guide des tailles</button>
           </div>
           <div class="size-grid" id="size-grid">
             {% for size in product.sizes %}
-              <button
-                class="size-btn"
-                data-size="{{ size }}"
-                aria-label="Taille {{ size }}"
-              >{{ size }}</button>
+              <button class="size-btn" data-size="{{ size }}" aria-label="Taille {{ size }}">{{ size }}</button>
             {% endfor %}
           </div>
-          <p id="size-error" class="mt-2" style="font-size:0.72rem; color:#c0392b; display:none; letter-spacing:0.08em">
-            Veuillez sélectionner une taille.
-          </p>
+          <p id="size-error" class="mt-2" style="font-size:0.72rem; color:#c0392b; display:none; letter-spacing:0.08em">Veuillez sélectionner une taille.</p>
         </div>
         {% endif %}
 
-        {# ── Color selector ─────────────────────────────────────── #}
+        {# Color selector #}
         {% if product.colors %}
         <div class="mb-8">
           <span class="label block mb-3">Couleur — <span id="color-label" style="color:var(--c-shadow); font-style:italic; font-family:var(--font-display)">{{ product.colors[0] }}</span></span>
           <div class="flex flex-wrap gap-2" id="color-grid">
             {% for color in product.colors %}
-              <button
-                class="size-btn {% if loop.first %}selected{% endif %}"
-                data-color="{{ color }}"
-                style="width:auto; padding:0 1rem; font-size:0.7rem; letter-spacing:0.08em"
-                aria-label="Couleur {{ color }}"
-              >{{ color }}</button>
+              <button class="size-btn {% if loop.first %}selected{% endif %}" data-color="{{ color }}" style="width:auto; padding:0 1rem; font-size:0.7rem; letter-spacing:0.08em" aria-label="Couleur {{ color }}">{{ color }}</button>
             {% endfor %}
           </div>
         </div>
         {% endif %}
 
-        {# ── Quantity + Add to cart ──────────────────────────────── #}
+        {# Add to cart #}
         {% if product.stock_status == 'instock' %}
         <div class="flex items-stretch gap-3 mb-8">
-
-          {# Add to cart — left, takes remaining space #}
-          <button
-            type="button"
-            id="btn-add-cart"
-            class="btn-primary flex-1 justify-center"
-            data-product-id="{{ product.id }}"
-            data-product-name="{{ product.name }}"
-          >
+          <button type="button" id="btn-add-cart" class="btn-primary flex-1 justify-center js-add-to-cart">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             Ajouter au panier
           </button>
 
-          {# Qty — right, minimal and elegant #}
-          <div style="
-            display:flex; align-items:center;
-            border: 1px solid rgba(32,32,48,0.18);
-          ">
-            <button type="button" id="qty-minus" aria-label="Diminuer" style="
-              width:38px; min-height:48px;
-              border:none; background:none; cursor:pointer;
-              font-size:1rem; font-weight:300; color:var(--c-shadow);
-              display:flex; align-items:center; justify-content:center;
-              transition:var(--transition);
-            "
-            onmouseover="this.style.background='rgba(32,32,48,0.04)'"
-            onmouseout="this.style.background='none'"
-            >−</button>
-
-            <span id="qty-display" style="
-              width:32px; text-align:center;
-              font-family:var(--font-display); font-style:italic;
-              font-size:1.1rem; color:var(--c-shadow);
-              border-left:1px solid rgba(32,32,48,0.12);
-              border-right:1px solid rgba(32,32,48,0.12);
-              padding:0 4px; line-height:1;
-            ">1</span>
-
-            <button type="button" id="qty-plus" aria-label="Augmenter" style="
-              width:38px; min-height:48px;
-              border:none; background:none; cursor:pointer;
-              font-size:1rem; font-weight:300; color:var(--c-shadow);
-              display:flex; align-items:center; justify-content:center;
-              transition:var(--transition);
-            "
-            onmouseover="this.style.background='rgba(32,32,48,0.04)'"
-            onmouseout="this.style.background='none'"
-            >+</button>
+          <div style="display:flex; align-items:center; border: 1px solid rgba(32,32,48,0.18);">
+            <button type="button" id="qty-minus" style="width:38px; min-height:48px; border:none; background:none; cursor:pointer;">−</button>
+            <span id="qty-display" style="width:32px; text-align:center; font-family:var(--font-display); font-style:italic; font-size:1.1rem;">1</span>
+            <button type="button" id="qty-plus" style="width:38px; min-height:48px; border:none; background:none; cursor:pointer;">+</button>
           </div>
-
         </div>
         {% endif %}
 
-        {# ── Trust signals ───────────────────────────────────────── #}
-        <div class="grid grid-cols-3 gap-3 mb-8 pt-4"
-             style="border-top: 1px solid rgba(32,32,48,0.08)">
-          {% for signal in [
-            { icon: '✦', label: 'Livraison', sub: '48–72h' },
-            { icon: '◈', label: 'Paiement', sub: 'Sécurisé' },
-            { icon: '❧', label: 'Retours', sub: '14 jours' }
-          ] %}
-          <div class="text-center py-3">
-            <div style="font-size:1rem; color:var(--c-olive); margin-bottom:0.35rem">{{ signal.icon }}</div>
-            <div class="label" style="color:var(--c-shadow); display:block; margin-bottom:0.15rem">{{ signal.label }}</div>
-            <div style="font-size:0.7rem; color:var(--c-mauve); font-weight:300">{{ signal.sub }}</div>
-          </div>
-          {% endfor %}
-        </div>
-
-        {# ── Accordion: Description + Composition + Livraison ────── #}
+        {# Accordions #}
         <div style="border-top: 1px solid rgba(32,32,48,0.1)">
-
           {% for panel in [
-            { id: 'care',  label: 'Composition & Entretien', content: 'Matière principale : lin naturelle. Lavage à 30°C, à la main ou en machine délicat. Ne pas sécher en machine. Repassage à basse température.' },
-            { id: 'ship',  label: 'Livraison & Retours',     content: 'Livraison standard 48–72h en Tunisie. Retours acceptés sous 14 jours dans leur emballage d\'origine, non portés.' }
+            { id: 'care', label: 'Composition & Entretien', content: 'Matière principale : lin naturelle. Lavage à 30°C...' },
+            { id: 'ship', label: 'Livraison & Retours', content: 'Livraison standard 48–72h en Tunisie...' }
           ] %}
-            {% if panel.content %}
             <div style="border-bottom: 1px solid rgba(32,32,48,0.08)">
-              <button
-                class="accordion-trigger w-full flex items-center justify-between py-4"
-                style="background:none; border:none; cursor:pointer; text-align:left"
-                data-target="acc-{{ panel.id }}"
-              >
+              <button class="accordion-trigger w-full flex items-center justify-between py-4" data-target="acc-{{ panel.id }}">
                 <span class="label" style="color:var(--c-shadow)">{{ panel.label }}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-olive)" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-olive)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               <div class="accordion-panel" id="acc-{{ panel.id }}">
-                <p style="font-size:0.875rem; font-weight:300; line-height:1.8; color:rgba(32,32,48,0.72); padding-bottom:1.25rem">
-                  {{ panel.content|striptags }}
-                </p>
+                <p style="font-size:0.875rem; font-weight:300; line-height:1.8; color:rgba(32,32,48,0.72); padding-bottom:1.25rem">{{ panel.content|striptags }}</p>
               </div>
             </div>
-            {% endif %}
           {% endfor %}
-
         </div>
-
-      </div>{# /product-info-sticky #}
+      </div>
     </div>
   </section>
 
-  {# ── Hidden inputs for JS ─────────────────────────────────────── #}
   <input type="hidden" id="product-id-input" value="{{ product.id }}">
   <input type="hidden" id="product-qty-input" value="1">
-
 </div>
 {% endblock %}
 
 {% block scripts_extra %}
 <script>
 (function () {
-
-  /* ── Image switcher ──────────────────────────────── */
-  const mainImg   = document.getElementById('main-image');
+  const mainImg = document.getElementById('main-image');
   const thumbBtns = document.querySelectorAll('#thumb-rail button');
 
   thumbBtns.forEach(btn => {
@@ -316,30 +193,18 @@
       thumbBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       mainImg.classList.add('fading');
-      setTimeout(() => {
-        mainImg.src = btn.dataset.src;
-        mainImg.classList.remove('fading');
-      }, 280);
+      setTimeout(() => { mainImg.src = btn.dataset.src; mainImg.classList.remove('fading'); }, 280);
     });
   });
 
-  /* ── Quantity stepper ────────────────────────────── */
   let qty = 1;
   const qtyDisplay = document.getElementById('qty-display');
-  const qtyInput   = document.getElementById('product-qty-input');
+  document.getElementById('qty-minus')?.addEventListener('click', () => { if (qty > 1) { qty--; qtyDisplay.textContent = qty; } });
+  document.getElementById('qty-plus')?.addEventListener('click', () => { if (qty < 10) { qty++; qtyDisplay.textContent = qty; } });
 
-  document.getElementById('qty-minus')?.addEventListener('click', () => {
-    if (qty > 1) { qty--; qtyDisplay.textContent = qty; qtyInput.value = qty; }
-  });
-  document.getElementById('qty-plus')?.addEventListener('click', () => {
-    if (qty < 10) { qty++; qtyDisplay.textContent = qty; qtyInput.value = qty; }
-  });
-
-  /* ── Size selection ──────────────────────────────── */
-  const sizeBtns  = document.querySelectorAll('#size-grid .size-btn');
+  const sizeBtns = document.querySelectorAll('#size-grid .size-btn');
   const sizeError = document.getElementById('size-error');
   let selectedSize = null;
-
   sizeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       sizeBtns.forEach(b => b.classList.remove('selected'));
@@ -349,11 +214,9 @@
     });
   });
 
-  /* ── Color selection ─────────────────────────────── */
-  const colorBtns  = document.querySelectorAll('#color-grid .size-btn');
+  const colorBtns = document.querySelectorAll('#color-grid .size-btn');
   const colorLabel = document.getElementById('color-label');
   let selectedColor = colorBtns.length ? colorBtns[0]?.dataset.color : null;
-
   colorBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('selected'));
@@ -363,74 +226,5 @@
     });
   });
 
-  /* ── Add to cart ─────────────────────────────────── */
-  const addBtn = document.getElementById('btn-add-cart');
-  addBtn?.addEventListener('click', async () => {
 
-    if (sizeBtns.length && !selectedSize) {
-      sizeError.style.display = 'block';
-      sizeError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
-
-    addBtn.disabled = true;
-    addBtn.textContent = '…';
-
-    try {
-      const res = await fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          product_id: document.getElementById('product-id-input').value,
-          quantity:   qty,
-          size:       selectedSize,
-          color:      selectedColor,
-        }),
-      });
-
-      if (res.ok) {
-        document.dispatchEvent(new CustomEvent('cart:updated'));
-        const toast = document.querySelector('.toast');
-        if (toast) {
-          toast.textContent = 'Ajouté au panier ✓';
-          toast.classList.add('show');
-          setTimeout(() => toast.classList.remove('show'), 2800);
-        }
-        document.querySelector('.cart-drawer')?.classList.add('is-open');
-        document.getElementById('cart-overlay')?.classList.add('is-open');
-      } else {
-        throw new Error('Server error');
-      }
-    } catch {
-      const toast = document.querySelector('.toast');
-      if (toast) {
-        toast.textContent = 'Erreur — réessayez.';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2800);
-      }
-    } finally {
-      addBtn.disabled = false;
-      addBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> Ajouter au panier`;
-    }
-  });
-
-  /* ── Accordion ───────────────────────────────────── */
-  document.querySelectorAll('.accordion-trigger').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const panel = document.getElementById(btn.dataset.target);
-      const isOpen = panel.classList.contains('open');
-      document.querySelectorAll('.accordion-panel').forEach(p => p.classList.remove('open'));
-      document.querySelectorAll('.accordion-trigger').forEach(b => b.classList.remove('open'));
-      if (!isOpen) {
-        panel.classList.add('open');
-        btn.classList.add('open');
-      }
-    });
-  });
-
-})();
-</script>
 {% endblock %}

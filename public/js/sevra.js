@@ -66,6 +66,7 @@ class CartDrawer {
     this.drawer  = document.getElementById('cart-drawer');
     this.overlay = document.getElementById('cart-overlay');
     this.bindTriggers();
+    window.openCartDrawer = () => this.open();
   }
 
   bindTriggers() {
@@ -90,7 +91,44 @@ class CartDrawer {
     document.body.style.overflow = '';
   }
 }
+function initAddToCart() {
+  // Listen for any form that is meant to add to cart
+  document.querySelectorAll('form[data-add-to-cart]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
+      const btn = form.querySelector('button[type="submit"]');
+      const formData = new FormData(form);
+
+      // Visual feedback
+      if (btn) btn.disabled = true;
+
+      try {
+        const response = await fetch(form.action || '/cart/add', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (response.ok) {
+          // 1. Trigger the refresh function we defined in cart.js
+          if (window.refreshSevraCart) {
+            await window.refreshSevraCart();
+          } else {
+            // Fallback if cart.js isn't playing nice
+            window.location.reload();
+          }
+
+          showToast('Article ajouté au panier');
+        }
+      } catch (error) {
+        showToast('Erreur lors de l\'ajout');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  });
+}
 /* ─── Quantity Stepper ───────────────────────────────────────── */
 function initQtySteppers() {
   document.querySelectorAll('.qty-stepper').forEach(stepper => {
@@ -243,4 +281,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initSearch();
   initPageTransition();
   initHeaderScroll();
+  initAddToCart();
 });

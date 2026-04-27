@@ -1,56 +1,66 @@
 {# templates/components/product/product_card.twig #}
 
 <article class="product-card flex flex-col h-full">
-  <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}" class="block overflow-hidden">
+  {# 1. Check for slug to prevent path() errors #}
+  {% set product_url = product.slug is defined ? path('product_detail', { slug: product.slug }) : '#' %}
+
+  <a href="{{ product_url }}" class="block overflow-hidden relative group">
     <div class="overflow-hidden relative aspect-[3/4]">
+
+      {# 2. Handle image array variants (images vs gallery) #}
+      {% set img_src = '/images/placeholder.jpg' %}
+      {% if product.images is defined and product.images[0] is defined %}
+        {% set img_src = product.images[0] %}
+      {% elseif product.gallery is defined and product.gallery[0] is defined %}
+        {% set img_src = product.gallery[0] %}
+      {% endif %}
+
       <img
-        src="{{ product.images[0] ?? '/images/placeholder.jpg' }}"
-        alt="{{ product.name ?? 'Ensemble Sevra' }}"
-        class="product-card__img w-full h-full object-cover"
+        src="{{ img_src }}"
+        alt="{{ product.name|default('Ensemble Sevra') }}"
+        class="product-card__img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy">
 
-      {# Dynamic category badge — first category, if any #}
-      {% if product.categories is defined and product.categories|length > 0 %}
-        <span class="absolute top-3 left-3 label px-2 py-1"
-              style="background:var(--c-snow); color:var(--c-olive-dark)">
+      {# Badges #}
+      {% if product.categories is defined and product.categories is iterable and product.categories|length > 0 %}
+        <span class="absolute top-3 left-3 label px-2 py-1 z-10" style="background:var(--c-snow); color:var(--c-olive-dark)">
           {{ product.categories[0] }}
         </span>
       {% endif %}
 
-      {# Sale badge #}
-      {% if product.on_sale is defined and product.on_sale %}
-        <span class="absolute top-3 right-3 label px-2 py-1"
-              style="background:var(--c-shadow); color:var(--c-snow)">
+      {% if product.on_sale|default(false) %}
+        <span class="absolute top-3 right-3 label px-2 py-1 z-10" style="background:var(--c-shadow); color:var(--c-snow)">
           Soldes
         </span>
       {% endif %}
 
-      {# Quick-add overlay on hover #}
-      <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 hover:opacity-100 transition-opacity duration-300"
-           style="background:linear-gradient(to top, rgba(32,32,48,0.35) 0%, transparent 55%)">
+      {# Quick-add overlay #}
+      <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+           style="background:linear-gradient(to top, rgba(32,32,48,0.3) 0%, transparent 60%)">
+
         <button
-          class="btn-primary"
-          style="font-size:0.68rem; padding:0.65rem 1.4rem"
-          data-quick-add="{{ product.id ?? '' }}"
-          onclick="event.preventDefault(); event.stopPropagation();">
-          Ajouter au panier
+        type="button"
+        class="btn-primary js-quick-add"
+        data-product-id="{{ product.id|default(product._id|default('')) }}"
+        style="font-size:0.68rem; padding:0.65rem 1.4rem"
+        onclick="event.preventDefault(); event.stopPropagation();">
+        Ajouter au panier
         </button>
       </div>
     </div>
   </a>
 
   <div class="product-card__body flex flex-col flex-grow pt-4">
-    <a href="{{ path('product_detail', { slug: product.slug ?? '#' }) }}"
-       class="hover:opacity-70 transition-opacity flex-grow">
-      <h3 class="product-card__name">{{ product.name ?? 'Ensemble en Lin' }}</h3>
+    <a href="{{ product_url }}" class="hover:opacity-70 transition-opacity flex-grow">
+      <h3 class="product-card__name">{{ product.name|default('Ensemble en Lin') }}</h3>
     </a>
     <div class="flex items-center justify-between mt-auto pt-1">
       <p class="product-card__price">
-        {% if product.on_sale is defined and product.on_sale and product.sale_price is defined %}
+        {% if product.on_sale|default(false) and product.sale_price is defined %}
           <span style="color:var(--c-shadow)">{{ product.sale_price }} DT</span>
           <span style="font-size:0.75rem; color:var(--c-mauve); text-decoration:line-through; margin-left:0.35rem">{{ product.regular_price }} DT</span>
         {% else %}
-          {{ product.price is defined ? product.price ~ ' DT' : '— DT' }}
+          {{ product.price|default(product.regular_price|default('0')) }} DT
         {% endif %}
       </p>
     </div>

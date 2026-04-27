@@ -10,6 +10,9 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    # Ensure CartService is defined if not automatically loaded
+    App\Service\CartService: ~
+
     App\Security\WordPress\AuthenticationEntryPoint:
         arguments:
             $urlGenerator: '@router'

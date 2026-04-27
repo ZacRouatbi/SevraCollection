@@ -1,75 +1,78 @@
-{# templates/layouts/base.twig #}
+{# templates/base.html.twig #}
 <!DOCTYPE html>
 <html lang="fr" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Sevra Collection{% endblock %}</title>
-  <meta name="description" content="{% block meta_desc %}Ensembles en laine pour femme — Sevra Collection{% endblock %}">
 
-   {# Google Fonts #}
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  {# Google Fonts #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            olive:  'var(--c-olive)',
-            snow:  'var(--c-snow)',
+            olive: 'var(--c-olive)',
+            snow: 'var(--c-snow)',
             shadow: 'var(--c-shadow)',
-            mauve:  'var(--c-mauve)',
-            cream:  'var(--c-white)',
+            mauve: 'var(--c-mauve)',
+            cream: 'var(--c-white)',
           },
           fontFamily: {
-           display: ['var(--font-display)'],
-            body:   ['var(--font-body)'],
+            display: ['var(--font-display)'],
+            body: ['var(--font-body)'],
           },
         }
       }
     }
   </script>
 
-  {# Sevra Design Tokens + Custom CSS #}
   <link rel="stylesheet" href="{{ asset('css/sevra.css') }}">
-
   {% block head_extra %}{% endblock %}
 </head>
 <body class="bg-linen font-body antialiased">
 
-  {# ── Header ──────────────────────────────────────────────── #}
+  {# ── Header ── #}
   {% include 'components/header/header.twig' %}
 
-  {# ── Main Content ─────────────────────────────────────────── #}
+  {# ── Main Content ── #}
   <main class="min-h-screen" id="main-content">
     {% block content %}{% endblock %}
   </main>
 
-  {# ── Footer ───────────────────────────────────────────────── #}
+  {# ── Footer ── #}
   {% include 'components/footer/footer.twig' %}
 
-  {# ── Modals & Overlays ────────────────────────────────────── #}
+  {# ── Modals & Overlays ── #}
   {% include 'components/modal/auth_modal.twig' %}
   {% include 'components/modal/search_modal.twig' %}
+
+  {# The Drawer now has access to cart_service via Twig Globals #}
   {% include 'components/cart/cart_drawer.twig' %}
 
-  {# ── Cart overlay backdrop ────────────────────────────────── #}
   <div id="cart-overlay"
        class="fixed inset-0 bg-shadow/40 backdrop-blur-sm z-[150] opacity-0 pointer-events-none transition-opacity duration-300 [&.is-open]:opacity-100 [&.is-open]:pointer-events-auto"
        data-cart-close></div>
 
-  {# ── Toast placeholder ────────────────────────────────────── #}
   <div class="toast" role="status" aria-live="polite"></div>
 
-   {# ── Scripts ──────────────────────────────────────────────── #}
-   {# GSAP must load BEFORE sevra.js #}
+  {# ── Scripts ── #}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  {# Core UI Logic #}
   <script src="{{ asset('js/sevra.js') }}?v={{ "now"|date("U") }}"></script>
-<script src="{{ asset('js/cart_drawer.js') }}?v={{ "now"|date("U") }}"></script>
-   {% block scripts_extra %}{% endblock %}
+
+  {# Unified Cart Logic (Page + Drawer) #}
+  <script src="{{ asset('js/cart.js') }}?v={{ "now"|date("U") }}"></script>
+ <script src="{{ asset('js/cart-actions.js') }}?v={{ "now"|date("U") }}"></script>
+  {% block scripts_extra %}
+
+  {% endblock %}
 </body>
 </html>
