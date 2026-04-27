@@ -31,6 +31,7 @@ services:
         arguments:
             $wpUrl:       '%env(WORDPRESS_URL)%'
             $wpApiSecret: '%env(WP_API_SECRET)%'
+            $wooCommerceService: '@App\Service\WooCommerceService'
 
     App\Service\WooCommerceService:
         arguments:
@@ -38,6 +39,7 @@ services:
             $wpUrl:    '%env(WORDPRESS_URL)%'
             $wcKey:    '%env(WC_CONSUMER_KEY)%'
             $wcSecret: '%env(WC_CONSUMER_SECRET)%'
+            $wpApiSecret: '%env(WP_API_SECRET)%'
 
     App\Security\LoginSuccessHandler:
         arguments:

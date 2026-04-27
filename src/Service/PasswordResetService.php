@@ -130,7 +130,7 @@ class PasswordResetService
 
         // Build absolute logo URL using the router — works in dev (localhost) and prod automatically
         $baseUrl = $this->urlGenerator->generate('home', [], UrlGeneratorInterface::ABSOLUTE_URL);
-        $logoUrl = rtrim($baseUrl, '/') . '/' . ltrim($this->assetPackages->getUrl('images/SevraLogo.png'), '/');
+        $logoUrl = 'https://sevracollection.com/wp-content/uploads/2026/04/EmailBannerSevra.png';
 
         $emailMessage = (new Email())
             ->from($this->mailerFrom)
@@ -174,21 +174,14 @@ class PasswordResetService
         <table width="600" cellpadding="0" cellspacing="0" border="0" role="presentation"
                style="max-width:600px;width:100%;background-color:#FDFAF7;border-radius:1px;
                       box-shadow:0 4px 48px rgba(32,24,16,0.10),0 1px 4px rgba(32,24,16,0.06);">
-
-          <!-- Gold gradient top bar -->
-          <tr>
-            <td style="background:linear-gradient(90deg,#6B5B45 0%,#C4A882 40%,#D4BC98 60%,#8A7455 100%);
-                       height:4px;font-size:0;line-height:0;" role="presentation">&nbsp;</td>
-          </tr>
-
           <!-- Logo header -->
           <tr>
-            <td align="center" style="padding:52px 48px 40px;">
+            <td align="center" style="width:620;">
               <a href="https://sevracollection.com" style="text-decoration:none;display:block;">
                 <img src="{$logoUrl}"
                      alt="Sevra Collection"
-                     width="160"
-                     style="display:block;width:160px;max-width:160px;height:auto;margin:0 auto;border:0;"
+                     width="620"
+                     style="display:block;width:100%;max-width:620px;border:0;"
                 />
               </a>
             </td>

@@ -17,6 +17,7 @@ class WooCommerceService
         private readonly string              $wpUrl,
         private readonly string              $wcKey,
         private readonly string              $wcSecret,
+        private readonly string              $wpApiSecret,
     ) {}
 
     /**
@@ -342,5 +343,145 @@ public function getLowStockProducts(int $limit = 5): array
 
     // Normalize for the templates
     return array_map(fn(array $p) => $this->normalize($p), $products);
+}
+public function createOrder(
+    array $data,
+    array $cartItems,
+    float $total,
+    string $paymentMethod,
+    ?int $customerId = null,
+    ?string $customerToken = null
+): array {
+    $paymentMapping = [
+        'cash_on_delivery' => 'cod',
+        'clicktopay'       => 'clicktopay',
+    ];
+    $paymentMethodId = $paymentMapping[$paymentMethod] ?? 'cod';
+
+    // Build billing/shipping arrays
+    $billing = [
+        'first_name' => $data['first_name'],
+        'last_name'  => $data['last_name'],
+        'email'      => $data['email'],
+        'phone'      => $data['phone'] ?? '',
+        'address_1'  => $data['address'],
+        'city'       => $data['city'],
+        'postcode'   => $data['zip'] ?? '',
+        'country'    => $data['country'] ?? 'TN',
+    ];
+    $shipping = $billing;
+
+    // Build line items (use variation_id if size/color provided – you'll need the findVariationId helper)
+    $lineItems = [];
+    foreach ($cartItems as $item) {
+        $lineItem = [
+            'product_id' => (int) $item['product_id'],
+            'quantity'   => (int) $item['qty'],
+        ];
+        $size  = $item['size'] ?? '';
+        $color = $item['color'] ?? '';
+        if ($size || $color) {
+            $variationId = $this->findVariationId((int) $item['product_id'], $size, $color);
+            if ($variationId) {
+                $lineItem['variation_id'] = $variationId;
+            } else {
+                throw new \RuntimeException(sprintf('Variation introuvable pour « %s » (%s / %s).', $item['name'], $size, $color));
+            }
+        }
+        $lineItems[] = $lineItem;
+    }
+
+    $payload = [
+        'customer_id'    => $customerId,
+        'payment_method' => $paymentMethodId,
+        'billing'        => $billing,
+        'shipping'       => $shipping,
+        'line_items'     => $lineItems,
+        'customer_note'  => $data['notes'] ?? '',
+    ];
+
+    try {
+        $response = $this->client->request(
+            'POST',
+            rtrim($this->wpUrl, '/') . '/wp-json/sevra/v1/create-order',
+            [
+                'headers' => [
+                    'X-Sevra-Secret' => $this->wpApiSecret,
+                    'Content-Type'   => 'application/json',
+                ],
+                'json'    => $payload,
+                'timeout' => 15,
+            ]
+        );
+
+        if ($response->getStatusCode() !== 201) {
+            $body = $response->getContent(false);
+            $this->logger->error('Custom order creation failed', ['status' => $response->getStatusCode(), 'body' => $body]);
+            throw new \RuntimeException('La commande n\'a pas pu être créée. Veuillez réessayer.');
+        }
+
+        $order = $response->toArray();
+        // Return a normalized array with at least 'id' for the flash message
+        return ['id' => $order['order_id']];
+
+    } catch (TransportExceptionInterface $e) {
+        $this->logger->error('Custom order creation transport error', ['error' => $e->getMessage()]);
+        throw new \RuntimeException('Service de commande indisponible.');
+    }
+}
+// WooCommerceService.php
+public function getOrdersByCustomer(int $customerId): array
+{
+    try {
+        $response = $this->client->request('GET', rtrim($this->wpUrl, '/') . '/wp-json/wc/v3/orders', [
+            'auth_basic' => [$this->wcKey, $this->wcSecret],
+            'query'      => [
+                'customer' => $customerId,
+                'per_page' => 50,
+                'order'    => 'desc',
+            ],
+            'timeout' => 15,
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        $orders = $response->toArray();
+
+        // Enrich with product images
+        foreach ($orders as &$order) {
+            foreach ($order['line_items'] as &$item) {
+                $productId = $item['product_id'] ?? 0;
+                if ($productId) {
+                    $product = $this->getProductById($productId);
+                    $item['image'] = $product['images'][0] ?? $product['gallery'][0] ?? null;
+                } else {
+                    $item['image'] = null;
+                }
+            }
+        }
+
+        // Map to simpler structure for template
+        return array_map(function ($o) {
+            return [
+                'number' => $o['number'],
+                'date'   => $o['date_created'] ?? '',
+                'status' => $o['status'],
+                'total'  => $o['total'],
+                'items'  => array_map(function ($i) {
+                    return [
+                        'name'     => $i['name'],
+                        'quantity' => $i['quantity'],
+                        'price'    => $i['price'],
+                        'image'    => $i['image'] ?? '/images/placeholder.jpg',
+                    ];
+                }, $o['line_items']),
+            ];
+        }, $orders);
+    } catch (\Throwable $e) {
+        $this->logger->error('getOrdersByCustomer failed: ' . $e->getMessage());
+        return [];
+    }
 }
 }

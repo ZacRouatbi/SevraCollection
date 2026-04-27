@@ -135,44 +135,66 @@
 
       {# ─ SECTION: Orders ───────────────────────────────────── #}
       <section id="section-orders" class="account-section hidden">
-        <p class="font-display italic text-2xl mb-6">Mes commandes</p>
+  <p class="font-display italic text-2xl mb-6">Mes commandes</p>
 
-        {% if orders is not empty %}
-          <div class="space-y-4">
-            {% for order in orders %}
-              <div class="bg-white/60 p-5 border border-olive/10">
-                <div class="flex items-center justify-between mb-3">
-                  <div>
-                    <p class="font-display italic text-lg">Commande #{{ order.number }}</p>
-                    <p class="text-xs text-mauve font-light mt-0.5">
-                      {{ order.date is defined ? order.date|date('d/m/Y') : '' }}
-                    </p>
+  {% if orders is not empty %}
+    <div class="space-y-6">
+      {% for order in orders %}
+        <div class="bg-white/60 border border-olive/10">
+          {# Order header #}
+          <div class="p-5 flex items-center justify-between">
+            <div>
+              <p class="font-display italic text-lg">Commande #{{ order.number }}</p>
+              <p class="text-xs text-mauve font-light mt-0.5">
+                {{ order.date is defined ? order.date|date('d/m/Y') : '' }}
+              </p>
+            </div>
+            <span class="label px-3 py-1"
+                  style="background:var(--c-linen-deep);
+                         color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
+              {{ order.status ?? 'En cours' }}
+            </span>
+          </div>
+
+          {# Line items #}
+          {% if order.items is defined and order.items is not empty %}
+            <div class="border-t border-shadow/8 px-5 py-3 space-y-3">
+              {% for item in order.items %}
+                <div class="flex items-center gap-4">
+                  <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
+                       class="w-16 h-20 object-cover flex-shrink-0 border border-shadow/10">
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-sm text-shadow">{{ item.name }}</p>
+                    <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
                   </div>
-                  <span class="label px-3 py-1"
-                        style="background:var(--c-linen-deep);
-                               color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
-                    {{ order.status ?? 'En cours' }}
-                  </span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-light text-shadow/60">
-                    {{ order.items_count ?? '?' }} article(s)
-                  </p>
-                  <p class="font-display italic text-lg" style="color:var(--c-olive)">
-                    {{ order.total }} DT
+                  <p class="text-sm font-display italic text-olive">
+                    {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
                   </p>
                 </div>
-              </div>
-            {% endfor %}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {# Order footer (total) #}
+          <div class="border-t border-shadow/8 px-5 py-3 flex justify-between items-center">
+            <p class="text-sm font-light text-shadow/60">
+              {{ order.items_count ?? order.items|length }} article(s)
+            </p>
+            <p class="font-display italic text-lg" style="color:var(--c-olive)">
+              {{ order.total }} DT
+            </p>
           </div>
-        {% else %}
-          <div class="flex flex-col items-center justify-center py-16 text-center">
-            <p class="font-display italic text-2xl text-shadow/30 mb-2">Aucune commande</p>
-            <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
-            <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
-          </div>
-        {% endif %}
-      </section>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+      <p class="font-display italic text-2xl text-shadow/30 mb-2">Aucune commande</p>
+      <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
+      <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
+    </div>
+  {% endif %}
+</section>
 
     </div>
   </div>

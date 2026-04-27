@@ -4,6 +4,7 @@
 {% block title %}Commander — Sevra{% endblock %}
 
 {% block content %}
+
 <div class="max-w-6xl mx-auto px-6 lg:px-10 py-12">
 
   <div class="mb-10">
@@ -11,65 +12,84 @@
     <h1 class="text-display">Finaliser la commande</h1>
   </div>
 
-  <form method="POST" action="{{ path('checkout_confirm') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+  {% if cart_items is empty %}
+    <div class="text-center py-16">
+      <p class="font-display italic text-2xl mb-4">Votre panier est vide</p>
+      <a href="{{ path('shop') }}" class="btn-primary">Retour à la boutique</a>
+    </div>
+  {% else %}
 
+  <form method="POST" action="{{ path('checkout_confirm') }}" id="checkout-form" novalidate
+        class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">
     <div class="lg:col-span-2 space-y-8">
 
+      {# Contact #}
       <section>
         <p class="font-display italic text-xl mb-5 text-shadow">Contact</p>
         <div class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="input-label" for="co-first">Prénom</label>
+              <label class="input-label" for="co-first">Prénom *</label>
               <input class="input-field" type="text" id="co-first" name="first_name"
-                     required autocomplete="given-name"
+                     required minlength="2" autocomplete="given-name"
                      value="{{ user.first_name ?? '' }}" placeholder="Yasmine">
+              <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
             </div>
             <div>
-              <label class="input-label" for="co-last">Nom</label>
+              <label class="input-label" for="co-last">Nom *</label>
               <input class="input-field" type="text" id="co-last" name="last_name"
-                     required autocomplete="family-name"
+                     required minlength="2" autocomplete="family-name"
                      value="{{ user.last_name ?? '' }}" placeholder="Aziz">
+              <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
             </div>
           </div>
           <div>
-            <label class="input-label" for="co-email">E-mail</label>
+            <label class="input-label" for="co-email">E-mail *</label>
             <input class="input-field" type="email" id="co-email" name="email"
                    required autocomplete="email"
                    value="{{ user.email ?? '' }}" placeholder="votre@email.com">
+            <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
           </div>
           <div>
             <label class="input-label" for="co-phone">Téléphone</label>
             <input class="input-field" type="tel" id="co-phone" name="phone"
                    autocomplete="tel"
-                   value="{{ user.phone ?? '' }}" placeholder="+216 XX XXX XXX">
+                   value="{{ user.phone ?? '' }}" placeholder="+216 XX XXX XXX"
+                   pattern="^\+?[0-9\s\-]{7,15}$" title="Format attendu : +21612345678">
+            <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
           </div>
         </div>
       </section>
 
       <div class="border-t border-olive/15"></div>
 
+      {# Adresse #}
       <section>
         <p class="font-display italic text-xl mb-5 text-shadow">Adresse de livraison</p>
         <div class="space-y-4">
           <div>
-            <label class="input-label" for="co-addr">Adresse</label>
+            <label class="input-label" for="co-addr">Adresse *</label>
             <input class="input-field" type="text" id="co-addr" name="address"
-                   required autocomplete="street-address"
+                   required minlength="5" autocomplete="street-address"
                    value="{{ user.address ?? '' }}" placeholder="15 Rue de la Liberté">
+            <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="input-label" for="co-city">Ville</label>
+              <label class="input-label" for="co-city">Ville *</label>
               <input class="input-field" type="text" id="co-city" name="city"
-                     required autocomplete="address-level2"
+                     required minlength="2" autocomplete="address-level2"
                      value="{{ user.city ?? '' }}" placeholder="Tunis">
+              <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
             </div>
             <div>
               <label class="input-label" for="co-zip">Code postal</label>
               <input class="input-field" type="text" id="co-zip" name="zip"
                      autocomplete="postal-code"
-                     value="{{ user.zip ?? '' }}" placeholder="1000">
+                     value="{{ user.zip ?? '' }}" placeholder="1000"
+                     pattern="[A-Za-z0-9\-\s]{2,10}" title="Exemple : 1000 ou 2034">
+              <div class="form-error text-red-600 text-xs mt-1 hidden"></div>
             </div>
           </div>
           <div>
@@ -82,16 +102,15 @@
 
       <div class="border-t border-olive/15"></div>
 
+      {# Paiement #}
       <section>
         <p class="font-display italic text-xl mb-5 text-shadow">Paiement</p>
         <div class="space-y-3">
-
           <label class="flex items-center gap-3 p-4 border border-shadow/15 cursor-pointer
                         hover:border-olive transition-colors has-[:checked]:border-olive">
             <input type="radio" name="payment_method" value="cash_on_delivery" class="accent-olive" checked>
             <span class="text-sm font-light">Paiement à la livraison</span>
           </label>
-
           <label class="flex items-center gap-3 p-4 border border-shadow/15 cursor-pointer
                         hover:border-olive transition-colors has-[:checked]:border-olive">
             <input type="radio" name="payment_method" value="clicktopay" class="accent-olive">
@@ -102,10 +121,7 @@
               </span>
             </div>
           </label>
-
         </div>
-
-        {# Click to Pay notice — shown when selected #}
         <div id="clicktopay-notice" class="hidden mt-3 p-4 border border-olive/20 flex items-start gap-3">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="1.5" class="shrink-0 mt-0.5" style="color:var(--c-olive)">
@@ -118,40 +134,33 @@
             Click to Pay. Votre commande sera validée automatiquement au retour.
           </p>
         </div>
-
       </section>
     </div>
 
-    {# ── Order Summary ───────────────────────────────────────── #}
+    {# Order Summary #}
     <div class="lg:col-span-1">
       <div class="bg-white/70 p-6 sticky top-24 border border-olive/20">
         <p class="label mb-4">Votre commande</p>
 
         <div class="space-y-3 mb-4 pb-4 border-b border-shadow/8">
-          {% if cart_items is not empty %}
-            {% for item in cart_items %}
-              <div class="flex items-center gap-3">
-                <img src="{{ item.image ?? '/images/placeholder.jpg' }}"
-                     alt="{{ item.name }}" class="w-14 aspect-[3/4] object-cover shrink-0">
-                <div class="flex-1 min-w-0">
-                  <p class="font-display italic text-base leading-tight">{{ item.name }}</p>
-                  <p class="text-xs font-light" style="color:var(--c-mauve)">
-                    Taille {{ item.size }} · ×{{ item.qty }}
-                  </p>
-                </div>
-                <p class="text-sm font-light shrink-0" style="color:var(--c-olive)">
-                  {{ item.price }} DT
+          {% for item in cart_items %}
+            <div class="flex items-center gap-3">
+              <div class="flex-1 min-w-0">
+                <p class="font-display italic text-base leading-tight">{{ item.name }}</p>
+                <p class="text-xs font-light" style="color:var(--c-mauve)">
+                  Taille {{ item.size ?? 'Unique' }} · ×{{ item.qty }}
                 </p>
               </div>
-            {% endfor %}
-          {% else %}
-            <p class="text-sm font-light text-center py-2" style="color:var(--c-mauve)">Panier vide</p>
-          {% endif %}
+              <p class="text-sm font-light shrink-0" style="color:var(--c-olive)">
+                {{ item.price }} DT
+              </p>
+            </div>
+          {% endfor %}
         </div>
 
         <div class="summary-row">
           <span class="text-sm font-light">Sous-total</span>
-          <span class="text-sm">{{ subtotal ?? '0' }} DT</span>
+          <span class="text-sm">{{ subtotal }} DT</span>
         </div>
         <div class="summary-row">
           <span class="text-sm font-light">Livraison</span>
@@ -159,8 +168,23 @@
         </div>
         <div class="summary-row total">
           <span>Total</span>
-          <span style="color:var(--c-olive)">{{ subtotal ?? '0' }} DT</span>
+          <span style="color:var(--c-olive)"><span id="display-total">{{ subtotal }}</span> DT</span>
         </div>
+
+        <input type="hidden" name="order_total" value="{{ subtotal }}">
+
+        {# Flash messages (will be replaced dynamically on error) #}
+        <div id="form-errors-container"></div>
+        {% for message in app.flashes('error') %}
+          <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+            {{ message }}
+          </div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+          <div class="mt-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded">
+            {{ message }}
+          </div>
+        {% endfor %}
 
         <button type="submit" class="btn-primary w-full justify-center mt-6">
           Confirmer la commande
@@ -172,18 +196,144 @@
         </p>
       </div>
     </div>
-
   </form>
+  {% endif %}
+</div>
+
+{# ── SUCCESS MODAL (hidden by default) ─────────────────── #}
+<div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70">
+  <div class="relative bg-[#FDFAF7] max-w-md w-full p-8 md:p-10 shadow-2xl border border-[var(--c-olive)]/20">
+    <button id="close-modal-btn" class="absolute top-4 right-4 text-[var(--c-mauve)] hover:text-[var(--c-olive)] transition-colors" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="flex justify-center mb-6">
+      <div class="w-16 h-16 rounded-full bg-[var(--c-olive)]/10 flex items-center justify-center">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#768064" stroke-width="1.5">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="font-display italic text-2xl text-center mb-3 text-[var(--c-shadow)]">
+      Merci, votre commande<br>est confirmée !
+    </h1>
+    <p class="text-sm font-light text-center mb-8 leading-relaxed text-[var(--c-mauve)]">
+      N° de commande : <span id="modal-order-id" class="font-bold text-[var(--c-olive)]"></span><br>
+      Vous recevrez un email de confirmation sous peu.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="{{ path('home') }}" class="btn-primary flex-1 justify-center text-sm">Accueil</a>
+      <a href="{{ path('shop') }}"
+         class="btn-outline flex-1 justify-center text-sm
+                text-[var(--c-olive)] border-[var(--c-olive)]
+                hover:bg-[var(--c-olive)] hover:text-[var(--c-snow)] hover:border-[var(--c-olive)]">
+        Boutique
+      </a>
+    </div>
+  </div>
 </div>
 
 {% block scripts_extra %}
 <script>
-  document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const notice = document.getElementById('clicktopay-notice');
-      notice.classList.toggle('hidden', radio.value !== 'clicktopay');
+  (function() {
+    // Payment method notice toggle
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const notice = document.getElementById('clicktopay-notice');
+        if (notice) notice.classList.toggle('hidden', radio.value !== 'clicktopay');
+      });
     });
-  });
+
+    const checkoutForm = document.getElementById('checkout-form');
+    const modal = document.getElementById('success-modal');
+    const modalOrderId = document.getElementById('modal-order-id');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const errorsContainer = document.getElementById('form-errors-container');
+
+    if (checkoutForm) {
+      checkoutForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Client-side HTML5 validation
+        let valid = true;
+        const inputs = checkoutForm.querySelectorAll('input[required]');
+        checkoutForm.querySelectorAll('.form-error').forEach(el => el.classList.add('hidden'));
+        inputs.forEach(input => {
+          input.classList.remove('border-2', 'border-red-400');
+          const errorDiv = input.parentNode.querySelector('.form-error');
+          if (!input.validity.valid) {
+            valid = false;
+            if (errorDiv) {
+              errorDiv.textContent = input.validationMessage || 'Champ invalide.';
+              errorDiv.classList.remove('hidden');
+            }
+            input.classList.add('border-2', 'border-red-400');
+          }
+        });
+        if (!valid) return;
+
+        if (errorsContainer) errorsContainer.innerHTML = '';
+
+        const btn = checkoutForm.querySelector('button[type="submit"]');
+        const originalBtnHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'En cours…';
+
+        try {
+          const response = await fetch(checkoutForm.action, {
+            method: 'POST',
+            body: new FormData(checkoutForm),
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Hide the checkout page content
+            const mainContent = document.querySelector('.max-w-6xl');
+            if (mainContent) mainContent.style.display = 'none';
+
+            // Show the modal
+            modalOrderId.textContent = '#' + data.order_id;
+            modal.classList.remove('hidden');
+
+            // Update cart count to 0
+            const cartCountEl = document.querySelector('.cart-count');
+            if (cartCountEl) cartCountEl.textContent = '0';
+          } else {
+            if (errorsContainer) {
+              errorsContainer.innerHTML = '<div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">' +
+                (data.error || 'Une erreur est survenue.') + '</div>';
+            }
+          }
+        } catch (err) {
+          if (errorsContainer) {
+            errorsContainer.innerHTML = '<div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">Erreur réseau. Veuillez réessayer.</div>';
+          }
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
+      });
+    }
+
+    // Modal interactions
+    function redirectHome(e) {
+      e.stopPropagation();
+      window.location.href = '{{ path('home') }}';
+    }
+    if (modal) {
+      modal.addEventListener('click', redirectHome);
+      closeBtn?.addEventListener('click', redirectHome);
+      modal.querySelector('.bg-\\[\\#FDFAF7\\]')?.addEventListener('click', (e) => e.stopPropagation());
+    }
+  })();
 </script>
 {% endblock %}
 

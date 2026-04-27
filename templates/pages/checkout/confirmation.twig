@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Commande confirmée — Sevra{% endblock %}
+
+{% block content %}
+{# Added h-screen and w-screen to ensure the flex container occupies the full viewport for perfect centering #}
+<div id="success-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-shadow/60 backdrop-blur-sm h-screen w-screen">
+  <div class="relative bg-[#FDFAF7] max-w-md w-full p-8 md:p-10 shadow-2xl border border-[var(--c-olive)]/20">
+    {# Close button #}
+    <button id="close-modal-btn" class="absolute top-4 right-4 text-[var(--c-mauve)] hover:text-[var(--c-olive)] transition-colors" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    {# Check icon #}
+    <div class="flex justify-center mb-6">
+      <div class="w-16 h-16 rounded-full bg-[var(--c-olive)]/10 flex items-center justify-center">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#768064" stroke-width="1.5">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="font-display italic text-2xl text-center mb-3 text-[var(--c-shadow)]">
+      Merci, votre commande<br>est confirmée !
+    </h1>
+    <p class="text-sm font-light text-center mb-8 leading-relaxed text-[var(--c-mauve)]">
+      N° de commande : <span class="font-bold text-[var(--c-olive)]">#{{ order_id }}</span><br>
+      Vous recevrez un email de confirmation sous peu.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="{{ path('home') }}" class="btn-primary flex-1 justify-center text-sm text-center py-3">Accueil</a>
+      <a href="{{ path('shop') }}"
+         class="btn-outline flex-1 justify-center text-sm text-center py-3 text-[var(--c-olive)] border-[var(--c-olive)]
+                hover:bg-[var(--c-olive)] hover:text-[var(--c-snow)] hover:border-[var(--c-olive)]">
+        Boutique
+      </a>
+    </div>
+  </div>
+</div>
+
+{% block scripts_extra %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('success-overlay');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const homeUrl = '{{ path('home') }}';
+
+    function redirectHome(e) {
+      e.stopPropagation();
+      window.location.href = homeUrl;
+    }
+
+    overlay.addEventListener('click', redirectHome);
+    closeBtn.addEventListener('click', redirectHome);
+
+    // Select the modal content to prevent closing when clicking inside
+    const modalContent = overlay.querySelector('.bg-\\[\\#FDFAF7\\]');
+    if (modalContent) {
+      modalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+  });
+</script>
+{% endblock %}
+{% endblock %}

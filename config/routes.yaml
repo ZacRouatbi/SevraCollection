@@ -67,7 +67,6 @@ checkout:
 checkout_confirm:
     path: /checkout/confirm
     controller: App\Controller\CheckoutController::confirm
-
 editorial:
     path: /editorial
     controller: App\Controller\EditorialController::index

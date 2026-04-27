@@ -17,7 +17,8 @@ class AccountService
         private readonly HttpClientInterface $client,
         private readonly LoggerInterface $logger,
         private readonly string $wpUrl,
-        private readonly string $wpApiSecret
+        private readonly string $wpApiSecret,
+        private readonly WooCommerceService  $wooCommerceService,
     ) {}
 
     public function getUserProfile(int $wpUserId, array &$session): ?array
@@ -40,24 +41,9 @@ class AccountService
     }
 
     public function getUserOrders(int $wpUserId, array &$session): array
-    {
-        try {
-            $response = $this->client->request(
-                'GET',
-                rtrim($this->wpUrl, '/') . '/wp-json/sevra/v1/orders/' . $wpUserId,
-                [
-                    'headers' => ['X-Sevra-Secret' => $this->wpApiSecret],
-                ]
-            );
-
-            return $response->toArray();
-
-        } catch (\Exception $e) {
-            $this->logger->error('getUserOrders failed: ' . $e->getMessage());
-            return [];
-        }
-    }
-
+{
+    return $this->wooCommerceService->getOrdersByCustomer($wpUserId);
+}
     // ✅ FIXED CORE FUNCTION
     public function updateProfile(int $wpUserId, array $data, array &$session, ?string $token): array
     {
