@@ -31,12 +31,12 @@ services:
 
     App\Service\WooCommerceService:
         arguments:
+            $client:   '@woocommerce.http_client'
             $wpUrl:    '%env(WORDPRESS_URL)%'
             $wcKey:    '%env(WC_CONSUMER_KEY)%'
             $wcSecret: '%env(WC_CONSUMER_SECRET)%'
 
-    # Handles guest→user cart merge on login + target path redirect
     App\Security\LoginSuccessHandler:
         arguments:
-            $cartService:   '@App\Service\CartService'
-            $urlGenerator:  '@router'
+            $cartService:  '@App\Service\CartService'
+            $urlGenerator: '@router'

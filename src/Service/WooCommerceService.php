@@ -9,7 +9,8 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 class WooCommerceService
-{
+{   
+    
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly LoggerInterface     $logger,

@@ -7,11 +7,26 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
         storage_factory_id: session.storage.factory.native
+
     php_errors:
         log: true
 
-    # IMPORTANT: Enable custom error pages
     error_controller: App\Controller\ErrorController::show
+
+    http_client:
+        default_options:
+            verify_peer: false
+            verify_host: false
+            timeout: 8
+            max_duration: 10
+        scoped_clients:
+            woocommerce.http_client:
+                base_uri: '%env(WORDPRESS_URL)%'
+                verify_peer: false
+                verify_host: false
+                timeout: 8
+                max_duration: 10
+
 when@test:
     framework:
         test: true

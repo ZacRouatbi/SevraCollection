@@ -62,12 +62,12 @@
         {{ product.description ?? 'Ensemble en laine pure — alliant chaleur, douceur et élégance. Disponible en plusieurs tailles.' }}
       </p>
 
-      {# Add to cart form #}
-      <form method="POST" action="{{ path('cart_add') ?? '#' }}" class="space-y-6">
-        {% if product is not null %}
-          <input type="hidden" name="product_id" value="{{ product.id }}">
-        {% endif %}
-        <input type="hidden" name="size" id="selected-size" value="">
+       {# Add to cart form #}
+       <form method="POST" action="{{ path('cart_add') ?? '#' }}" class="space-y-6">
+         {% if product is not null %}
+           <input type="hidden" name="product_id" value="{{ product.id }}">
+         {% endif %}
+         <input type="hidden" name="size" id="selected-size" value="">
 
         {# Size selector #}
         <div>
