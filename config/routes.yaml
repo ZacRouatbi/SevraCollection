@@ -97,7 +97,10 @@ reset_password_form:
 product_detail:
     path: /produit/{slug}
     controller: App\Controller\ProductController::show
-
+newsletter_subscribe:
+    path: /newsletter/subscribe
+    controller: App\Controller\NewsletterController::subscribe
+    methods: [POST]
 api_search:
     path: /api/search
     controller: App\Controller\SearchController::search

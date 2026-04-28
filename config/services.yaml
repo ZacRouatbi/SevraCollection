@@ -56,8 +56,15 @@ services:
     App\EventListener\SecurityHeadersListener:
         tags:
             - { name: 'kernel.event_listener' }
+    App\Service\NewsletterService:
+        arguments:
+            $client:      '@woocommerce.http_client'
+            $logger:      '@logger'
+            $wpUrl:       '%env(WORDPRESS_URL)%'
+            $wpApiSecret: '%env(WP_API_SECRET)%'
 
-    # ❌ REMOVED: DefaultLoginRateLimiter - Symfony auto-configures this
-    # Symfony\Component\Security\Http\RateLimiter\DefaultLoginRateLimiter:
-    #     arguments:
-    #         $cache: '@cache.app'
+    # ✅ Newsletter Controller
+    App\Controller\NewsletterController:
+        arguments:
+            $newsletterService: '@App\Service\NewsletterService'
+

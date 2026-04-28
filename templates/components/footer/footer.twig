@@ -11,7 +11,7 @@
          alt="Sevra Logo"
          class="h-8 mb-6"
          style="display: block; filter: none !important; opacity: 1 !important;">
-</a>
+  </a>
         <p class="text-sm font-light leading-relaxed max-w-xs" style="color: rgba(242, 229, 217, 0.6)">
           Ensembles en laine d'exception, conçus pour la femme moderne.<br>
           Pantalons et shorts — chaleur sans compromis.
@@ -32,14 +32,14 @@
                onmouseover="this.style.color='#202030'"
                onmouseout="this.style.color='#F2E5D9'">Mon Compte</a>
           </li>
-                    <li>
+                     <li>
             <a href="{{ path('about') }}"
                class="transition-colors duration-300"
                style="color: #F2E5D9;"
                onmouseover="this.style.color='#202030'"
                onmouseout="this.style.color='#F2E5D9'"> À propos</a>
           </li>
-            <li>
+          <li>
             <a href="{{ path('gallery') }}"
                class="transition-colors duration-300"
                style="color: #F2E5D9;"
@@ -64,60 +64,124 @@
            onmouseout="this.style.color='#F2E5D9'">Newsletter</p>
         <p class="text-sm font-light mb-4" style="color: rgba(242, 229, 217, 0.6)">Recevez nos nouveautés en avant-première.</p>
         <div class="max-w-[280px]">
-          <form action="#" class="group flex items-center border-b py-2 transition-colors duration-300" style="border-color: rgba(242, 229, 217, 0.2)">
-             <input type="email"
-                    placeholder="votre@email.com"
-                    class="newsletter-input bg-transparent flex-1 outline-none text-sm"
-                    style="color: #F2E5D9" />
-             <button type="submit"
-                     class="ml-2 transition-colors duration-300"
-                     style="color: rgba(242, 229, 217, 0.6)"
-                     onmouseover="this.style.color='#202030'"
-                     onmouseout="this.style.color='rgba(242, 229, 217, 0.6)'">
-               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-               </svg>
-             </button>
+          <form id="newsletter-form" action="#" class="group flex items-center border-b py-2 transition-colors duration-300" style="border-color: rgba(242, 229, 217, 0.2)">
+              <input type="email" placeholder="votre@email.com" required
+                     class="newsletter-input bg-transparent flex-1 outline-none text-sm" style="color: #F2E5D9">
+              <button type="submit"
+                      class="ml-2 transition-colors duration-300" style="color: rgba(242, 229, 217, 0.6)"
+                      onmouseover="this.style.color='#202030'"
+                      onmouseout="this.style.color='rgba(242, 229, 217, 0.6)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
           </form>
+          <div id="newsletter-message" class="mt-2 text-xs hidden" style="color: rgba(242, 229, 217, 0.8)"></div>
         </div>
       </div>
 
     </div>
 
-    {# ── Bottom Row ───────────────────────────────────────────── #}
+    {# ── Bottom Row ────────────────────────────────────────────── #}
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: rgba(242, 229, 217, 0.1)">
       <p class="text-xs tracking-widest uppercase" style="color: rgba(242, 229, 217, 0.3)">
         © {{ "now"|date("Y") }} Sevra Collection. Tous droits réservés.
       </p>
       <div class="flex items-center gap-6">
 
-  <button onclick="openModal('modal-privacy')"
-          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
-          style="color: rgba(242, 229, 217, 0.5)"
-          onmouseover="this.style.color='#202030'"
-          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
-    Politique de confidentialité
-  </button>
+    <button onclick="openModal('modal-privacy')"
+              class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+              style="color: rgba(242, 229, 217, 0.5)"
+              onmouseover="this.style.color='#202030'"
+              onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+        Politique de confidentialité
+      </button>
 
-  <button onclick="openModal('modal-cgv')"
-          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
-          style="color: rgba(242, 229, 217, 0.5)"
-          onmouseover="this.style.color='#202030'"
-          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
-    CGV
-  </button>
+    <button onclick="openModal('modal-cgv')"
+              class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+              style="color: rgba(242, 229, 217, 0.5)"
+              onmouseover="this.style.color='#202030'"
+              onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+        CGV
+      </button>
 
-  <button onclick="openModal('modal-contact')"
-          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
-          style="color: rgba(242, 229, 217, 0.5)"
-          onmouseover="this.style.color='#202030'"
-          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
-    Contact
-  </button>
+    <button onclick="openModal('modal-contact')"
+              class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+              style="color: rgba(242, 229, 217, 0.5)"
+              onmouseover="this.style.color='#202030'"
+              onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+        Contact
+      </button>
 
-</div>
-
+      </div>
     </div>
 
   </div>
 </footer>
+
+<script>
+  (function() {
+    const form    = document.getElementById('newsletter-form');
+    const messageDiv = document.getElementById('newsletter-message');
+
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const emailInput = form.querySelector('input[type="email"]');
+      const btn        = form.querySelector('button[type="submit"]');
+
+      const email = emailInput?.value.trim() || '';
+
+      if (!email || !email.includes('@')) {
+        showMessage('Veuillez entrer un email valide.', 'error');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      }
+
+      try {
+        const response = await fetch('/newsletter/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage(data.message || 'Merci ! Vous êtes maintenant inscrit.', 'success');
+          form.reset();
+        } else {
+          showMessage(data.message || 'Une erreur est survenue.', 'error');
+        }
+      } catch (err) {
+        showMessage('Erreur de connexion. Veuillez réessayer.', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '';
+        }
+      }
+    });
+
+    function showMessage(msg, type) {
+      if (!messageDiv) return;
+      messageDiv.textContent = msg;
+      messageDiv.style.color = type === 'success' ? '#202030' : 'rgb(255, 100, 100)';
+      messageDiv.classList.remove('hidden');
+
+      setTimeout(() => {
+        messageDiv.classList.add('hidden');
+      }, 5000);
+    }
+  })();
+</script>
