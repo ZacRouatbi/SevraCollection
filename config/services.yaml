@@ -40,8 +40,24 @@ services:
             $wcKey:    '%env(WC_CONSUMER_KEY)%'
             $wcSecret: '%env(WC_CONSUMER_SECRET)%'
             $wpApiSecret: '%env(WP_API_SECRET)%'
+            $cache: '@cache.app'
 
     App\Security\LoginSuccessHandler:
         arguments:
             $cartService:  '@App\Service\CartService'
             $urlGenerator: '@router'
+
+    # ✅ Rate Limiter Service (our custom service)
+    App\Service\RateLimiterService:
+        arguments:
+            $cache: '@cache.app'
+
+    # ✅ Security Headers Listener
+    App\EventListener\SecurityHeadersListener:
+        tags:
+            - { name: 'kernel.event_listener' }
+
+    # ❌ REMOVED: DefaultLoginRateLimiter - Symfony auto-configures this
+    # Symfony\Component\Security\Http\RateLimiter\DefaultLoginRateLimiter:
+    #     arguments:
+    #         $cache: '@cache.app'

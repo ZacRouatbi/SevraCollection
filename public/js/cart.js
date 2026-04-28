@@ -1,6 +1,22 @@
+// cart.js - Updated with CSRF token handling
+
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ✅ CSRF Token cache
+  let cartCsrfToken = null;
+
+  async function getCartCsrfToken() {
+    if (cartCsrfToken) return cartCsrfToken;
+    try {
+      const response = await fetch('/cart/csrf-token');
+      const data = await response.json();
+      cartCsrfToken = data.token;
+      return cartCsrfToken;
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+      return null;
+    }
+  }
 
   function toast(msg) {
     const el = document.querySelector('.toast');
@@ -46,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof window.openCartDrawer === 'function') {
         window.openCartDrawer();
       } else {
-        // Fallback if the function isn't global
         document.getElementById('cart-drawer')?.classList.add('is-open');
         document.getElementById('cart-overlay')?.classList.add('is-open');
       }
@@ -87,14 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ── Global Listeners ────────────────────────────────────────────────────────
+  // ── Global Listeners ────────────────────────────────────────────────
 
   // Listen for the "Product Added" event (Triggered by your product page script)
   document.addEventListener('cart:add-success', () => {
     refreshDrawer();
   });
 
-  // ── Event Delegation ────────────────────────────────────────────────────────
+  // ── Event Delegation ────────────────────────────────────────────────
 
   document.addEventListener('click', async (e) => {
 
@@ -111,9 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       try {
+        // ✅ Get CSRF token
+        const token = await getCartCsrfToken();
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['X-CSRF-Token'] = token;
+        }
+
         const res = await fetch('/cart/remove', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify({ item_key: key }),
         });
 
@@ -162,14 +186,25 @@ document.addEventListener('DOMContentLoaded', () => {
       recomputeSummary();
 
       try {
+        // ✅ Get CSRF token
+        const token = await getCartCsrfToken();
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['X-CSRF-Token'] = token;
+        }
+
         await fetch('/cart/update', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify({ item_key: key, qty: newQty }),
         });
       } catch { /* Fail silently */ }
     }
   });
+
+  // ✅ Expose refresh function globally
   window.refreshSevraCart = async function() {
     console.log("Refreshing Drawer...");
     try {
@@ -187,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newFooter) document.querySelector('#cart-drawer .border-t').innerHTML = newFooter.innerHTML;
 
         // Re-run the count/badge logic
-        // This refers to the function already inside your cart.js
         if (typeof recomputeSummary === 'function') recomputeSummary();
 
         // Open the drawer
@@ -195,6 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cart-overlay')?.classList.add('is-open');
 
     } catch (e) { console.error("Drawer refresh failed", e); }
-};
+  };
 
 });

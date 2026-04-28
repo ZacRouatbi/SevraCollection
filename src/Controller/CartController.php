@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CartController extends AbstractController
 {
-    // ── Full cart page ────────────────────────────────────────────────────────
+    // ── Full cart page ────────────────────────────────────────────────
 
     #[Route('/cart', name: 'cart')]
     public function index(CartService $cart): Response
@@ -26,11 +26,38 @@ class CartController extends AbstractController
         ]);
     }
 
-    // ── Add to cart (AJAX POST, JSON body) ───────────────────────────────────
+    // ── CSRF Token endpoint for AJAX requests ────────────────────────
+
+    #[Route('/cart/csrf-token', name: 'cart_csrf_token', methods: ['GET'])]
+    public function getCsrfToken(): JsonResponse
+    {
+        return $this->json([
+            'token' => $this->container->get('security.csrf.token_manager')->getToken('cart')->getValue()
+        ]);
+    }
+
+    // ── Lightweight drawer content endpoint ────────────────────────
+
+    #[Route('/cart/drawer', name: 'cart_drawer_content', methods: ['GET'])]
+    public function drawerContent(CartService $cart): Response
+    {
+        return $this->render('components/cart/cart_drawer_content.twig', [
+            'cart_items' => $cart->getItems(),
+            'subtotal'   => $cart->getSubtotal(),
+        ]);
+    }
+
+    // ── Add to cart (AJAX POST, JSON body) ───────────────────────────
 
     #[Route('/cart/add', name: 'cart_add', methods: ['POST'])]
     public function add(Request $request, CartService $cart, WooCommerceService $woo): JsonResponse
     {
+        // ✅ CSRF Protection for cart operations
+        $csrfToken = $request->headers->get('X-CSRF-Token', '');
+        if (!$this->isCsrfTokenValid('cart', $csrfToken)) {
+            return $this->json(['error' => 'Invalid CSRF token.'], 403);
+        }
+
         $data = json_decode($request->getContent(), true) ?? [];
 
         $productId = (int) ($data['product_id'] ?? 0);
@@ -66,11 +93,17 @@ class CartController extends AbstractController
         ]);
     }
 
-    // ── Remove item (AJAX POST) ───────────────────────────────────────────────
+    // ── Remove item (AJAX POST) ───────────────────────────────────────
 
     #[Route('/cart/remove', name: 'cart_remove', methods: ['POST'])]
     public function remove(Request $request, CartService $cart): JsonResponse
     {
+        // ✅ CSRF Protection
+        $csrfToken = $request->headers->get('X-CSRF-Token', '');
+        if (!$this->isCsrfTokenValid('cart', $csrfToken)) {
+            return $this->json(['error' => 'Invalid CSRF token.'], 403);
+        }
+
         $data    = json_decode($request->getContent(), true) ?? [];
         $itemKey = (string) ($data['item_key'] ?? '');
 
@@ -88,11 +121,17 @@ class CartController extends AbstractController
         ]);
     }
 
-    // ── Update quantity (AJAX POST) ───────────────────────────────────────────
+    // ── Update quantity (AJAX POST) ───────────────────────────────────
 
     #[Route('/cart/update', name: 'cart_update', methods: ['POST'])]
     public function update(Request $request, CartService $cart): JsonResponse
     {
+        // ✅ CSRF Protection
+        $csrfToken = $request->headers->get('X-CSRF-Token', '');
+        if (!$this->isCsrfTokenValid('cart', $csrfToken)) {
+            return $this->json(['error' => 'Invalid CSRF token.'], 403);
+        }
+
         $data    = json_decode($request->getContent(), true) ?? [];
         $itemKey = (string) ($data['item_key'] ?? '');
         $qty     = (int)    ($data['qty']      ?? 1);
@@ -111,7 +150,7 @@ class CartController extends AbstractController
         ]);
     }
 
-    // ── Get cart state (AJAX GET — used on page load to hydrate drawer) ───────
+    // ── Get cart state (AJAX GET) ───────────────────────────────────
 
     #[Route('/cart/state', name: 'cart_state', methods: ['GET'])]
     public function state(CartService $cart): JsonResponse

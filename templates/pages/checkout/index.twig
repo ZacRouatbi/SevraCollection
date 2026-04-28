@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="max-w-6xl mx-auto px-6 lg:px-10 py-12">
+<div class="max-w-6xl mx-auto px-6 lg:px-10 py-12" id="checkout-content">
 
   <div class="mb-10">
     <span class="label mb-2 block">Paiement</span>
@@ -171,8 +171,6 @@
           <span style="color:var(--c-olive)"><span id="display-total">{{ subtotal }}</span> DT</span>
         </div>
 
-        <input type="hidden" name="order_total" value="{{ subtotal }}">
-
         {# Flash messages (will be replaced dynamically on error) #}
         <div id="form-errors-container"></div>
         {% for message in app.flashes('error') %}
@@ -201,8 +199,12 @@
 </div>
 
 {# ── SUCCESS MODAL (hidden by default) ─────────────────── #}
-<div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70">
-  <div class="relative bg-[#FDFAF7] max-w-md w-full p-8 md:p-10 shadow-2xl border border-[var(--c-olive)]/20">
+<div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6">
+  {# Overlay with fade transition #}
+  <div class="modal-overlay absolute inset-0 bg-black/70 opacity-0 transition-opacity duration-300"></div>
+
+  <div class="modal-content relative bg-[#FDFAF7] max-w-md w-full p-8 md:p-10 shadow-2xl border border-[var(--c-olive)]/20
+              transform scale-95 opacity-0 transition-all duration-300 ease-out">
     <button id="close-modal-btn" class="absolute top-4 right-4 text-[var(--c-mauve)] hover:text-[var(--c-olive)] transition-colors" aria-label="Fermer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -234,6 +236,11 @@
         Boutique
       </a>
     </div>
+
+    {# Auto-redirect countdown #}
+    <p class="text-xs text-center mt-4 text-[var(--c-mauve)]">
+      Redirection automatique dans <span id="countdown">10</span> secondes...
+    </p>
   </div>
 </div>
 
@@ -253,6 +260,97 @@
     const modalOrderId = document.getElementById('modal-order-id');
     const closeBtn = document.getElementById('close-modal-btn');
     const errorsContainer = document.getElementById('form-errors-container');
+    let redirectTimer = null;
+    let countdownInterval = null;
+
+    // Function to show modal with animation
+    function showSuccessModal(orderId) {
+      const overlay = modal.querySelector('.modal-overlay');
+      const content = modal.querySelector('.modal-content');
+
+      // Set order ID
+      if (modalOrderId) modalOrderId.textContent = '#' + orderId;
+
+      // Show modal
+      modal.classList.remove('hidden');
+
+      // Trigger animation after a frame
+      requestAnimationFrame(() => {
+        if (overlay) overlay.classList.remove('opacity-0');
+        if (content) {
+          content.classList.remove('scale-95', 'opacity-0');
+          content.classList.add('scale-100', 'opacity-100');
+        }
+      });
+
+      // Start countdown
+      let secondsLeft = 10;
+      const countdownEl = document.getElementById('countdown');
+      if (countdownEl) countdownEl.textContent = secondsLeft;
+
+      countdownInterval = setInterval(() => {
+        secondsLeft--;
+        if (countdownEl) countdownEl.textContent = secondsLeft;
+        if (secondsLeft <= 0) {
+          clearInterval(countdownInterval);
+          redirectHome();
+        }
+      }, 1000);
+
+      // Auto-redirect after 10 seconds
+      redirectTimer = setTimeout(redirectHome, 10000);
+    }
+
+    // Function to hide modal
+    function hideModal() {
+      const overlay = modal.querySelector('.modal-overlay');
+      const content = modal.querySelector('.modal-content');
+
+      if (overlay) overlay.classList.add('opacity-0');
+      if (content) {
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+      }
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+
+      // Clear timers
+      if (redirectTimer) clearTimeout(redirectTimer);
+      if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    function redirectHome() {
+      window.location.href = '{{ path('home') }}';
+    }
+
+    // Close button and overlay click
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideModal();
+        // Redirect after modal hides
+        setTimeout(redirectHome, 350);
+      });
+    }
+
+    if (modal) {
+      // Overlay click to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+          hideModal();
+          setTimeout(redirectHome, 350);
+        }
+      });
+
+      // Prevent clicks inside modal content from closing
+      const modalContent = modal.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.addEventListener('click', (e) => e.stopPropagation());
+      }
+    }
 
     if (checkoutForm) {
       checkoutForm.addEventListener('submit', async function(e) {
@@ -292,27 +390,50 @@
             }
           });
 
-          const data = await response.json();
+          // Try to parse JSON regardless of status
+          let data = null;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+          }
 
-          if (data.success) {
+          if (response.ok && data && data.success) {
             // Hide the checkout page content
-            const mainContent = document.querySelector('.max-w-6xl');
+            const mainContent = document.getElementById('checkout-content');
             if (mainContent) mainContent.style.display = 'none';
 
-            // Show the modal
-            modalOrderId.textContent = '#' + data.order_id;
-            modal.classList.remove('hidden');
+            // Show the modal with animation
+            showSuccessModal(data.order_id);
 
             // Update cart count to 0
             const cartCountEl = document.querySelector('.cart-count');
             if (cartCountEl) cartCountEl.textContent = '0';
           } else {
+            // Handle error response
+            let errorMessage = 'Une erreur est survenue.';
+
+            if (data) {
+              if (data.error) {
+                errorMessage = data.error;
+              } else if (data.errors && Array.isArray(data.errors)) {
+                errorMessage = data.errors.join(' ');
+              }
+            } else if (!response.ok) {
+              // Server returned non-JSON error (like 500 or redirect)
+              if (response.status === 0) {
+                errorMessage = 'Erreur réseau. Veuillez réessayer.';
+              } else {
+                errorMessage = 'Erreur serveur (' + response.status + '). Veuillez réessayer.';
+              }
+            }
+
             if (errorsContainer) {
               errorsContainer.innerHTML = '<div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">' +
-                (data.error || 'Une erreur est survenue.') + '</div>';
+                errorMessage + '</div>';
             }
           }
         } catch (err) {
+          // Network error (fetch failed)
           if (errorsContainer) {
             errorsContainer.innerHTML = '<div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">Erreur réseau. Veuillez réessayer.</div>';
           }
@@ -321,17 +442,6 @@
           btn.innerHTML = originalBtnHtml;
         }
       });
-    }
-
-    // Modal interactions
-    function redirectHome(e) {
-      e.stopPropagation();
-      window.location.href = '{{ path('home') }}';
-    }
-    if (modal) {
-      modal.addEventListener('click', redirectHome);
-      closeBtn?.addEventListener('click', redirectHome);
-      modal.querySelector('.bg-\\[\\#FDFAF7\\]')?.addEventListener('click', (e) => e.stopPropagation());
     }
   })();
 </script>

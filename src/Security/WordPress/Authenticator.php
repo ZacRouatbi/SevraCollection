@@ -20,14 +20,16 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
+use App\Service\RateLimiterService; // ✅ Added
+
 class Authenticator extends AbstractAuthenticator
 {
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly UrlGeneratorInterface $urlGenerator,
-         private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger,
         private readonly string $wpUrl,
-
+        private readonly RateLimiterService $rateLimiter  // ✅ Added
     ) {}
 
     public function supports(Request $request): ?bool
@@ -37,9 +39,20 @@ class Authenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
+        // ✅ Rate limiting for login
+        $clientIp = $request->getClientIp() ?? 'unknown';
+        $rateKey = 'login_' . $clientIp;
+        $rateCheck = $this->rateLimiter->isLimited($rateKey, 5, 300); // 5 attempts per 5 minutes
+
+        if ($rateCheck['limited']) {
+            throw new CustomUserMessageAuthenticationException(
+                'Trop de tentatives de connexion. Veuillez réessayer dans ' .
+                $rateCheck['retry_after'] . ' secondes.'
+            );
+        }
+
         $email = trim((string) $request->request->get('email', ''));
         $password = (string) $request->request->get('password', '');
-        $csrfToken = (string) $request->request->get('_csrf_token', '');
 
         if (empty($email) || empty($password)) {
             throw new CustomUserMessageAuthenticationException('Email et mot de passe requis.');
@@ -66,23 +79,19 @@ class Authenticator extends AbstractAuthenticator
             $data = $response->toArray();
             $token = $data['token'] ?? null;
             if (!$token) {
-                throw new CustomUserMessageAuthenticationException('Données d\'authentification incomplètes.');
+                throw new CustomUserMessageAuthenticationException('Données d\'authentification incompletes.');
             }
 
         } catch (TransportExceptionInterface $e) {
             throw new CustomUserMessageAuthenticationException('Connexion au service impossible.');
         }
-        $jwtParts = explode('.', $token);
-        $payload = [];
-        if (count($jwtParts) === 3) {
-            $payload = json_decode(base64_decode($jwtParts[1]), true);
-            $this->logger->error('JWT PAYLOAD', $payload);
-        }
 
-        $wpUserId = (int) ($payload['data']['user']['id'] ?? 0);
+        // REMOVED: Sensitive JWT payload logging for security
+
+        $wpUserId = (int) ($data['data']['user']['id'] ?? 0);
         $roles = [];
-        if (isset($payload['roles'])) {
-            $roles = (array) $payload['roles'];
+        if (isset($data['roles'])) {
+            $roles = (array) $data['roles'];
         }
 
         return new SelfValidatingPassport(
@@ -90,14 +99,17 @@ class Authenticator extends AbstractAuthenticator
                 return new User($email, $token, $wpUserId, $roles);
             }),
             [
-                new CsrfTokenBadge('authenticate', $csrfToken)
+                new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token'))
             ]
-            );
+        );
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        // Check if there's a saved target path (user was trying to access protected page)
+        // Reset rate limiter on successful login
+        $clientIp = $request->getClientIp() ?? 'unknown';
+        $this->rateLimiter->reset('login_' . $clientIp);
+
         if ($request->getSession()->has('_security.main.target_path')) {
             $targetPath = $request->getSession()->get('_security.main.target_path');
             return new RedirectResponse($targetPath);
@@ -109,22 +121,19 @@ class Authenticator extends AbstractAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         if ($request->hasSession()) {
-            // Store in both formats to ensure it's found
             $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
             $request->getSession()->set('_security.last_error', $exception);
             $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $request->request->get('email'));
             $request->getSession()->set('_security.last_username', $request->request->get('email'));
         }
 
-        // Get the referer URL
         $referer = $request->headers->get('referer');
 
-        // If referer exists, redirect back to it
         if ($referer && str_contains($referer, $request->getHost())) {
             return new RedirectResponse($referer);
         }
 
-        // Fallback to home page
         return new RedirectResponse($this->urlGenerator->generate('home'));
     }
+
 }

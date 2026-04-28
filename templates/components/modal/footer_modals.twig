@@ -1,0 +1,597 @@
+<style>
+  /* ── Variables ────────────────────────────────────────────── */
+  :root {
+    --c-olive:       #768064;
+    --c-olive-light: #8a9478;
+    --c-olive-dark:  #5c6550;
+    --c-snow:        #FFFAFA;
+    --c-snow-deep:   #e8d8c8;
+    --c-shadow:      #202030;
+    --c-shadow-soft: #2e2e42;
+    --c-mauve:       #94849B;
+    --c-mauve-light: #b0a2b8;
+    --c-white:       #FDFAF7;
+  }
+
+  /* ── Overlay ─────────────────────────────────────────────── */
+  .sevra-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(32, 32, 48, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s cubic-bezier(.4,0,.2,1),
+                visibility 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  .sevra-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ── Panel ───────────────────────────────────────────────── */
+  .sevra-modal {
+    position: relative;
+    background: var(--c-white);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 32px 80px rgba(32,32,48,.32), 0 2px 8px rgba(32,32,48,.12);
+    transform: translateY(28px) scale(0.97);
+    transition: transform 0.38s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .sevra-overlay.is-open .sevra-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  .sevra-modal__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 2rem 2rem 1.25rem;
+    background: var(--c-olive);
+    flex-shrink: 0;
+  }
+  .sevra-modal__eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(242,229,217,0.55);
+    margin-bottom: 0.35rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .sevra-modal__title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--c-snow);
+    line-height: 1.1;
+    margin: 0;
+  }
+  .sevra-modal__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(242,229,217,0.6);
+    padding: 0.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: 1rem;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .sevra-modal__close:hover {
+    color: var(--c-snow);
+    transform: rotate(90deg);
+  }
+
+  /* ── Body ────────────────────────────────────────────────── */
+  .sevra-modal__body {
+    overflow-y: auto;
+    padding: 2rem;
+    flex: 1;
+    color: var(--c-shadow);
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-snow-deep) transparent;
+  }
+  .sevra-modal__body::-webkit-scrollbar { width: 4px; }
+  .sevra-modal__body::-webkit-scrollbar-track { background: transparent; }
+  .sevra-modal__body::-webkit-scrollbar-thumb { background: var(--c-snow-deep); border-radius: 2px; }
+
+  /* ── Typography inside body ──────────────────────────────── */
+  .sevra-modal__body h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-olive-dark);
+    margin: 1.5rem 0 0.5rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(118,128,100,0.15);
+  }
+  .sevra-modal__body h3:first-child { margin-top: 0; }
+  .sevra-modal__body p {
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: rgba(32,32,48,0.72);
+    margin-bottom: 0.75rem;
+  }
+  .sevra-modal__body ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+  }
+  .sevra-modal__body ul li {
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: rgba(32,32,48,0.72);
+    padding-left: 1.25rem;
+    position: relative;
+  }
+  .sevra-modal__body ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--c-mauve);
+  }
+
+  /* ── Divider accent ──────────────────────────────────────── */
+  .sevra-divider {
+    width: 2.5rem;
+    height: 1px;
+    background: var(--c-mauve-light);
+    margin: 0.5rem 0 1.25rem;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .sevra-modal__footer {
+    padding: 1rem 2rem 1.25rem;
+    background: var(--c-snow);
+    border-top: 1px solid rgba(118,128,100,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .sevra-modal__footer-note {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(32,32,48,0.35);
+  }
+  .sevra-btn {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.5rem;
+    cursor: pointer;
+    border: 1px solid var(--c-olive);
+    background: transparent;
+    color: var(--c-olive-dark);
+    transition: background 0.22s, color 0.22s, border-color 0.22s;
+    border-radius: 1px;
+  }
+  .sevra-btn:hover {
+    background: var(--c-olive);
+    color: var(--c-snow);
+    border-color: var(--c-olive);
+  }
+  .sevra-btn--filled {
+    background: var(--c-olive);
+    color: var(--c-snow);
+  }
+  .sevra-btn--filled:hover {
+    background: var(--c-olive-dark);
+    border-color: var(--c-olive-dark);
+  }
+
+  /* ── Contact Form ────────────────────────────────────────── */
+  .sevra-field {
+    margin-bottom: 1.25rem;
+  }
+  .sevra-field label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-olive-dark);
+    margin-bottom: 0.4rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .sevra-field input,
+  .sevra-field textarea,
+  .sevra-field select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(118,128,100,0.3);
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--c-shadow);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.22s;
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+  .sevra-field input:focus,
+  .sevra-field textarea:focus,
+  .sevra-field select:focus {
+    border-bottom-color: var(--c-olive);
+  }
+  .sevra-field textarea {
+    resize: none;
+    min-height: 90px;
+  }
+  .sevra-field input::placeholder,
+  .sevra-field textarea::placeholder {
+    color: rgba(32,32,48,0.28);
+    font-size: 0.8rem;
+  }
+  .sevra-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.5rem;
+  }
+  @media (max-width: 480px) {
+    .sevra-form-grid { grid-template-columns: 1fr; }
+    .sevra-modal__header { padding: 1.5rem 1.25rem 1rem; }
+    .sevra-modal__body   { padding: 1.25rem; }
+    .sevra-modal__footer { padding: 0.75rem 1.25rem 1rem; }
+  }
+
+  /* ── Success state ───────────────────────────────────────── */
+  .sevra-success {
+    display: none;
+    text-align: center;
+    padding: 2rem 0 1rem;
+  }
+  .sevra-success__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--c-olive-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-olive);
+    margin-bottom: 1rem;
+  }
+  .sevra-success h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: 1.3rem !important;
+    font-weight: 400 !important;
+    border: none !important;
+    color: var(--c-shadow) !important;
+    text-transform: none !important;
+    letter-spacing: 0.02em !important;
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0 !important;
+  }
+  .sevra-success p { text-align: center; }
+</style>
+
+{# ════════════════════════════════════════════════════════════
+   1. POLITIQUE DE CONFIDENTIALITÉ
+   ════════════════════════════════════════════════════════════ #}
+<div id="modal-privacy" class="sevra-overlay" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+  <div class="sevra-modal">
+
+    <div class="sevra-modal__header">
+      <div>
+        <p class="sevra-modal__eyebrow">Sevra Collection</p>
+        <h2 class="sevra-modal__title" id="privacy-title">Politique de<br>confidentialité</h2>
+      </div>
+      <button class="sevra-modal__close" onclick="closeModal('modal-privacy')" aria-label="Fermer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="sevra-modal__body">
+      <p>Chez <strong>Sevra Collection</strong>, nous accordons une importance primordiale à la protection de vos données personnelles. La présente politique décrit la manière dont nous collectons, utilisons et protégeons vos informations.</p>
+      <div class="sevra-divider"></div>
+
+      <h3>1. Données collectées</h3>
+      <p>Dans le cadre de votre navigation et de vos achats, nous sommes susceptibles de collecter les données suivantes :</p>
+      <ul>
+        <li>Nom, prénom et adresse e-mail</li>
+        <li>Adresse de livraison et de facturation</li>
+        <li>Historique de commandes et préférences de navigation</li>
+        <li>Données de connexion et cookies techniques</li>
+      </ul>
+
+      <h3>2. Finalités du traitement</h3>
+      <p>Vos données sont traitées aux fins suivantes : gestion et suivi de vos commandes, personnalisation de votre expérience, envoi de notre newsletter (avec votre consentement), et amélioration continue de nos services.</p>
+
+      <h3>3. Conservation</h3>
+      <p>Vos données sont conservées pendant une durée maximale de 3 ans à compter de votre dernière interaction avec Sevra Collection, sauf obligation légale contraire.</p>
+
+      <h3>4. Partage des données</h3>
+      <p>Nous ne vendons jamais vos données. Elles peuvent être partagées uniquement avec nos prestataires logistiques et de paiement, dans le strict respect du RGPD.</p>
+
+      <h3>5. Vos droits</h3>
+      <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous bénéficiez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à <strong>privacy@sevra-collection.com</strong>.</p>
+
+      <h3>6. Cookies</h3>
+      <p>Ce site utilise des cookies techniques nécessaires à son bon fonctionnement, ainsi que des cookies analytiques anonymisés. Vous pouvez à tout moment modifier vos préférences depuis les paramètres de votre navigateur.</p>
+    </div>
+
+    <div class="sevra-modal__footer">
+      <span class="sevra-modal__footer-note">Mise à jour : Janvier 2025</span>
+      <button class="sevra-btn" onclick="closeModal('modal-privacy')">Fermer</button>
+    </div>
+
+  </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════
+   2. CONDITIONS GÉNÉRALES DE VENTE
+   ════════════════════════════════════════════════════════════ #}
+<div id="modal-cgv" class="sevra-overlay" role="dialog" aria-modal="true" aria-labelledby="cgv-title">
+  <div class="sevra-modal">
+
+    <div class="sevra-modal__header">
+      <div>
+        <p class="sevra-modal__eyebrow">Sevra Collection</p>
+        <h2 class="sevra-modal__title" id="cgv-title">Conditions Générales<br>de Vente</h2>
+      </div>
+      <button class="sevra-modal__close" onclick="closeModal('modal-cgv')" aria-label="Fermer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="sevra-modal__body">
+      <p>Les présentes Conditions Générales de Vente régissent l'ensemble des transactions effectuées sur le site <strong>sevra-collection.com</strong>. Toute commande implique l'acceptation pleine et entière de ces conditions.</p>
+      <div class="sevra-divider"></div>
+
+      <h3>1. Produits</h3>
+      <p>Les produits proposés à la vente sont des ensembles en laine d'exception — pantalons et shorts — conçus et fabriqués avec soin. Les photographies sont présentées à titre illustratif ; de légères variations de teinte peuvent exister selon les écrans.</p>
+
+      <h3>2. Prix</h3>
+      <p>Les prix sont indiqués en dinars tunisiens (TND), toutes taxes comprises. Sevra Collection se réserve le droit de modifier ses tarifs à tout moment, les prix appliqués étant ceux en vigueur au moment de la validation de la commande.</p>
+
+      <h3>3. Commande & paiement</h3>
+      <p>La commande est confirmée après validation du paiement. Nous acceptons les paiements par carte bancaire et virement. Toute commande non payée sous 48 h sera automatiquement annulée.</p>
+
+      <h3>4. Livraison</h3>
+      <ul>
+        <li>Livraison en Tunisie sous 3 à 5 jours ouvrables</li>
+        <li>Livraison internationale sous 7 à 14 jours ouvrables</li>
+        <li>Les frais de port sont indiqués au moment du récapitulatif de commande</li>
+      </ul>
+
+      <h3>5. Retours & échanges</h3>
+      <p>Vous disposez d'un délai de <strong>14 jours</strong> à compter de la réception pour retourner tout article non utilisé, dans son emballage d'origine. Les frais de retour sont à la charge du client sauf en cas d'erreur de notre part.</p>
+
+      <h3>6. Garantie</h3>
+      <p>Nos produits bénéficient de la garantie légale de conformité. En cas de défaut de fabrication, nous procédons à l'échange ou au remboursement intégral.</p>
+
+      <h3>7. Droit applicable</h3>
+      <p>Les présentes CGV sont soumises au droit tunisien. En cas de litige, une solution amiable sera recherchée en priorité avant tout recours judiciaire.</p>
+    </div>
+
+    <div class="sevra-modal__footer">
+      <span class="sevra-modal__footer-note">Version en vigueur : 2025</span>
+      <button class="sevra-btn" onclick="closeModal('modal-cgv')">Fermer</button>
+    </div>
+
+  </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════
+   3. CONTACT
+   ════════════════════════════════════════════════════════════ #}
+
+<style>
+  /* Contact-specific styles */
+  .sevra-contact-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(118,128,100,0.15);
+    border-radius: 1px;
+    text-decoration: none;
+    transition: background 0.22s, border-color 0.22s, transform 0.22s;
+    background: transparent;
+    cursor: pointer;
+  }
+  .sevra-contact-card:hover {
+    background: rgba(118,128,100,0.06);
+    border-color: rgba(118,128,100,0.35);
+    transform: translateY(-1px);
+  }
+  .sevra-contact-card--disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: default;
+  }
+  .sevra-contact-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(118,128,100,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-olive);
+    flex-shrink: 0;
+    transition: background 0.22s, border-color 0.22s;
+  }
+  .sevra-contact-card:hover .sevra-contact-icon {
+    background: var(--c-olive);
+    border-color: var(--c-olive);
+    color: var(--c-snow);
+  }
+  .sevra-contact-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--c-mauve);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    margin-bottom: 0.2rem;
+  }
+  .sevra-contact-value {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--c-shadow);
+    letter-spacing: 0.02em;
+  }
+  .sevra-contact-value--muted {
+    color: rgba(32,32,48,0.35);
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+  .sevra-contact-arrow {
+    margin-left: auto;
+    color: rgba(118,128,100,0.35);
+    flex-shrink: 0;
+    transition: color 0.22s, transform 0.22s;
+  }
+  .sevra-contact-card:hover .sevra-contact-arrow {
+    color: var(--c-olive);
+    transform: translateX(3px);
+  }
+  .sevra-contact-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+  .sevra-contact-divider::before,
+  .sevra-contact-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(118,128,100,0.12);
+  }
+  .sevra-contact-divider span {
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(32,32,48,0.25);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+</style>
+
+<div id="modal-contact" class="sevra-overlay" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+  <div class="sevra-modal" style="max-width: 460px;">
+
+    <div class="sevra-modal__header">
+      <div>
+        <p class="sevra-modal__eyebrow">Sevra Collection</p>
+        <h2 class="sevra-modal__title" id="contact-title">Nous contacter</h2>
+      </div>
+      <button class="sevra-modal__close" onclick="closeModal('modal-contact')" aria-label="Fermer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="sevra-modal__body" style="padding: 1.75rem 2rem;">
+
+      <p style="font-size:0.8rem; color:rgba(32,32,48,.5); line-height:1.8; margin-bottom:1.75rem; letter-spacing:0.01em;">
+        Notre équipe est disponible du lundi au vendredi, de 9 h à 18 h.
+      </p>
+
+      {# Email #}
+      <a href="mailto:contact@sevracollection.com" class="sevra-contact-card" style="display:flex;">
+        <div class="sevra-contact-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="2,4 12,13 22,4"/>
+          </svg>
+        </div>
+        <div>
+          <p class="sevra-contact-label">E-mail</p>
+          <p class="sevra-contact-value">contact@sevracollection.com</p>
+        </div>
+        <div class="sevra-contact-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </div>
+      </a>
+
+      <div class="sevra-contact-divider"><span>ou</span></div>
+
+      {# Phone — disabled until set up #}
+      <div class="sevra-contact-card sevra-contact-card--disabled">
+        <div class="sevra-contact-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="sevra-contact-label">Téléphone</p>
+          <p class="sevra-contact-value sevra-contact-value--muted">Bientôt disponible</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sevra-modal__footer">
+      <span class="sevra-modal__footer-note">Réponse par e-mail sous 24 h</span>
+      <button class="sevra-btn" onclick="closeModal('modal-contact')">Fermer</button>
+    </div>
+
+  </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════
+   JAVASCRIPT
+   ════════════════════════════════════════════════════════════ #}
+<script>
+  /* ── Open / Close ──────────────────────────────────────── */
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    // focus trap: focus close button
+    el.querySelector('.sevra-modal__close')?.focus();
+  }
+
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  /* ── Close on overlay click ────────────────────────────── */
+  document.querySelectorAll('.sevra-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  /* ── Close on Escape ───────────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.sevra-overlay.is-open').forEach(el => closeModal(el.id));
+  });
+
+
+</script>

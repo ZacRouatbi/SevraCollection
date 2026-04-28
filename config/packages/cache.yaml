@@ -16,4 +16,9 @@ framework:
 
         # Namespaced pools use the above "app" backend by default
         #pools:
-            #my.dedicated.cache: null
+        #    my.dedicated.cache: null
+
+when@prod:
+    framework:
+        cache:
+            app: cache.adapter.apcu  # Use APCu in production for better performance

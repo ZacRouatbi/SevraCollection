@@ -4,9 +4,8 @@ framework:
 
     session:
         handler_id: null
-        cookie_secure: auto
-        cookie_samesite: lax
-        storage_factory_id: session.storage.factory.native
+        cookie_secure: true  # CRITICAL: Always secure in production
+        cookie_samesite: strict  # Enhanced security for checkout flows
 
     php_errors:
         log: true
@@ -15,15 +14,15 @@ framework:
 
     http_client:
         default_options:
-            verify_peer: false
-            verify_host: false
+            verify_peer: true  # CRITICAL: Enable SSL verification
+            verify_host: true  # CRITICAL: Enable host verification
             timeout: 8
             max_duration: 10
         scoped_clients:
             woocommerce.http_client:
                 base_uri: '%env(WORDPRESS_URL)%'
-                verify_peer: false
-                verify_host: false
+                verify_peer: true  # CRITICAL: Enable for WooCommerce API
+                verify_host: true  # CRITICAL: Enable for WooCommerce API
                 timeout: 8
                 max_duration: 10
 

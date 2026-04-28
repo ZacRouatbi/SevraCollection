@@ -90,19 +90,33 @@
         © {{ "now"|date("Y") }} Sevra Collection. Tous droits réservés.
       </p>
       <div class="flex items-center gap-6">
-        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
-           style="color: rgba(242, 229, 217, 0.5)"
-           onmouseover="this.style.color='#202030'"
-           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">Politique de confidentialité</a>
-        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
-           style="color: rgba(242, 229, 217, 0.5)"
-           onmouseover="this.style.color='#202030'"
-           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">CGV</a>
-        <a href="#" class="text-xs uppercase tracking-wider transition-colors duration-300"
-           style="color: rgba(242, 229, 217, 0.5)"
-           onmouseover="this.style.color='#202030'"
-           onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">Contact</a>
-      </div>
+
+  <button onclick="openModal('modal-privacy')"
+          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+          style="color: rgba(242, 229, 217, 0.5)"
+          onmouseover="this.style.color='#202030'"
+          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+    Politique de confidentialité
+  </button>
+
+  <button onclick="openModal('modal-cgv')"
+          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+          style="color: rgba(242, 229, 217, 0.5)"
+          onmouseover="this.style.color='#202030'"
+          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+    CGV
+  </button>
+
+  <button onclick="openModal('modal-contact')"
+          class="text-xs uppercase tracking-wider transition-colors duration-300 bg-transparent border-none cursor-pointer p-0"
+          style="color: rgba(242, 229, 217, 0.5)"
+          onmouseover="this.style.color='#202030'"
+          onmouseout="this.style.color='rgba(242, 229, 217, 0.5)'">
+    Contact
+  </button>
+
+</div>
+
     </div>
 
   </div>

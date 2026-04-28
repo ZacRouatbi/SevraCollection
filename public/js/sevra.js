@@ -1,7 +1,26 @@
+// sevra.js - Updated with CSRF token handling for cart operations
+
 /**
  * sevra.js — Sevra Collection frontend interactions
  * Handles: auth modal, cart drawer, quantity steppers, search, toast, page transitions
  */
+
+// ✅ CSRF Token cache for cart operations
+let cartCsrfToken = null;
+
+// ✅ Helper to get CSRF token for cart AJAX requests
+async function getCartCsrfToken() {
+    if (cartCsrfToken) return cartCsrfToken;
+    try {
+        const response = await fetch('/cart/csrf-token');
+        const data = await response.json();
+        cartCsrfToken = data.token;
+        return cartCsrfToken;
+    } catch (error) {
+        console.error('Failed to get CSRF token:', error);
+        return null;
+    }
+}
 
 /* ─── Modal (Login / Register / Reset) ──────────────────────── */
 class AuthModal {
@@ -91,8 +110,8 @@ class CartDrawer {
     document.body.style.overflow = '';
   }
 }
+
 function initAddToCart() {
-  // Listen for any form that is meant to add to cart
   document.querySelectorAll('form[data-add-to-cart]').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -100,26 +119,33 @@ function initAddToCart() {
       const btn = form.querySelector('button[type="submit"]');
       const formData = new FormData(form);
 
-      // Visual feedback
       if (btn) btn.disabled = true;
 
       try {
+        // ✅ Get CSRF token before request
+        const token = await getCartCsrfToken();
+        const headers = {
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (token) {
+          headers['X-CSRF-Token'] = token;
+        }
+
         const response = await fetch(form.action || '/cart/add', {
           method: 'POST',
           body: formData,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: headers
         });
 
         if (response.ok) {
-          // 1. Trigger the refresh function we defined in cart.js
           if (window.refreshSevraCart) {
             await window.refreshSevraCart();
           } else {
-            // Fallback if cart.js isn't playing nice
             window.location.reload();
           }
-
           showToast('Article ajouté au panier');
+        } else if (response.status === 403) {
+          showToast('Erreur de sécurité. Veuillez rafraîchir la page.');
         }
       } catch (error) {
         showToast('Erreur lors de l\'ajout');
@@ -129,6 +155,7 @@ function initAddToCart() {
     });
   });
 }
+
 /* ─── Quantity Stepper ───────────────────────────────────────── */
 function initQtySteppers() {
   document.querySelectorAll('.qty-stepper').forEach(stepper => {
@@ -228,7 +255,6 @@ function initSearch() {
     if (e.key === 'Escape' && overlay.style.visibility === 'visible') closeSearch();
   });
 
-  // Suggestions: type-ahead stub
   input?.addEventListener('input', debounce(e => {
     const q = e.target.value.trim();
     if (q.length >= 2) {

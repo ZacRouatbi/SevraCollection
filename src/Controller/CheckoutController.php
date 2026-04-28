@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -6,6 +7,7 @@ namespace App\Controller;
 use App\Service\AccountService;
 use App\Service\CartService;
 use App\Service\WooCommerceService;
+use App\Service\RateLimiterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +19,8 @@ class CheckoutController extends AbstractController
     public function __construct(
         private readonly CartService        $cartService,
         private readonly AccountService     $accountService,
-        private readonly WooCommerceService $wooCommerce
+        private readonly WooCommerceService $wooCommerce,
+        private readonly RateLimiterService $rateLimiter  // ✅ Rate limiter added
     ) {}
 
     // ── Step 1: Checkout form ────────────────────────────────────────────────
@@ -37,7 +40,6 @@ class CheckoutController extends AbstractController
                 $wpUser  = $this->getAuthenticatedWpUser();
                 $session = $request->getSession()->all();
                 $user    = $this->accountService->getUserProfile($wpUser['id'], $session);
-                // Persist any session values the service may have written back
                 foreach ($session as $k => $v) {
                     $request->getSession()->set($k, $v);
                 }
@@ -58,14 +60,38 @@ class CheckoutController extends AbstractController
     #[Route('/checkout/confirm', name: 'checkout_confirm', methods: ['POST'])]
     public function confirm(Request $request): Response
     {
+        $isAjax = $request->isXmlHttpRequest();
+
+        // ✅ Rate limiting for checkout
+        $clientIp = $request->getClientIp() ?? 'unknown';
+        $rateKey = 'checkout_' . $clientIp;
+        $rateCheck = $this->rateLimiter->isLimited($rateKey, 5, 300); // 5 attempts per 5 minutes
+
+        if ($rateCheck['limited']) {
+            if ($isAjax) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Trop de tentatives. Veuillez réessayer dans ' . $rateCheck['retry_after'] . ' secondes.'
+                ], 429);
+            }
+            $this->addFlash('error', 'Trop de tentatives. Veuillez réessayer plus tard.');
+            return $this->redirectToRoute('checkout');
+        }
+
         // ── CSRF ──────────────────────────────────────────────────
         if (!$this->isCsrfTokenValid('checkout', $request->request->get('_csrf_token', ''))) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'error' => 'Jeton CSRF invalide.'], 403);
+            }
             throw $this->createAccessDeniedException('Jeton CSRF invalide.');
         }
 
         // ── Cart must not be empty ────────────────────────────────
         $cartItems = $this->cartService->getItems();
         if (empty($cartItems)) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'error' => 'Votre panier est vide.'], 400);
+            }
             $this->addFlash('error', 'Votre panier est vide.');
             return $this->redirectToRoute('shop');
         }
@@ -105,10 +131,12 @@ class CheckoutController extends AbstractController
         }
 
         if (!empty($errors)) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'errors' => $errors], 400);
+            }
             foreach ($errors as $error) {
                 $this->addFlash('error', $error);
             }
-            // Re-render form with user-supplied values so fields aren't wiped
             return $this->render('pages/checkout/index.twig', [
                 'cart_items' => $cartItems,
                 'subtotal'   => $this->cartService->getSubtotal(),
@@ -116,8 +144,8 @@ class CheckoutController extends AbstractController
             ]);
         }
 
-        // ── Price integrity check ─────────────────────────────────
-        $expectedTotal = 0.0;
+        // ── Price and stock integrity check ───────────────────────
+        $expectedTotal = '0.00';
         $wcErrors      = [];
 
         foreach ($cartItems as $item) {
@@ -129,33 +157,53 @@ class CheckoutController extends AbstractController
                 continue;
             }
 
-            $currentPrice = (float) ($wcProduct['sale_price'] ?: $wcProduct['regular_price'] ?: $wcProduct['price'] ?? 0);
-            $cartPrice    = (float) $item['price'];
+            // ── Stock validation ──────────────────────────────────
+            $requestedQty = (int) $item['qty'];
+            $stockStatus = $wcProduct['stock_status'] ?? 'instock';
+            $stockQuantity = $wcProduct['stock_quantity'] ?? null;
 
-            if (abs($cartPrice - $currentPrice) > 0.001) {
+            if ($stockStatus === 'outofstock') {
+                $wcErrors[] = sprintf('Le produit « %s » n\'est plus en stock.', $item['name']);
+                continue;
+            }
+
+            if ($stockQuantity !== null && $requestedQty > $stockQuantity) {
+                $wcErrors[] = sprintf(
+                    'Stock insuffisant pour « %s ». Disponible : %d, demandé : %d.',
+                    $item['name'],
+                    $stockQuantity,
+                    $requestedQty
+                );
+                continue;
+            }
+
+            // ── Price validation using active price from WC ────────
+            $currentPrice = (string) ($wcProduct['price'] ?? '0');
+            $cartPrice    = (string) $item['price'];
+
+            $currentPriceNorm = bcadd($currentPrice, '0', 2);
+            $cartPriceNorm    = bcadd($cartPrice, '0', 2);
+
+            if (bccomp($cartPriceNorm, $currentPriceNorm, 2) !== 0) {
                 $wcErrors[] = sprintf(
                     'Le prix de « %s » a changé (panier : %s DT, actuel : %s DT). Veuillez revoir votre panier.',
                     $item['name'],
-                    number_format($cartPrice, 2),
-                    number_format($currentPrice, 2)
+                    number_format((float)$cartPrice, 2),
+                    number_format((float)$currentPrice, 2)
                 );
+                continue;
             }
 
-            $expectedTotal += $currentPrice * (int) $item['qty'];
+            $expectedTotal = bcadd($expectedTotal, bcmul($currentPriceNorm, (string)$requestedQty, 2), 2);
         }
 
         if (!empty($wcErrors)) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'errors' => $wcErrors], 400);
+            }
             foreach ($wcErrors as $error) {
                 $this->addFlash('error', $error);
             }
-            return $this->redirectToRoute('checkout');
-        }
-
-        $expectedTotal  = round($expectedTotal, 2);
-        $submittedTotal = (float) $request->request->get('order_total', 0);
-
-        if (abs($submittedTotal - $expectedTotal) > 0.001) {
-            $this->addFlash('error', 'Le total de la commande a été modifié. Veuillez réessayer.');
             return $this->redirectToRoute('checkout');
         }
 
@@ -180,32 +228,33 @@ class CheckoutController extends AbstractController
             $order = $this->wooCommerce->createOrder(
                 $data,
                 $cartItems,
-                $expectedTotal,
+                (float) $expectedTotal,
                 $paymentMethod,
                 $customerId,
                 $customerToken
             );
         } catch (\RuntimeException $e) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
             $this->addFlash('error', $e->getMessage());
             return $this->redirectToRoute('checkout');
         }
 
-       $this->cartService->clear();
-       return $this->json([
-        'success'  => true,
-        'order_id' => $order['id'],
-    ]);
+        $this->cartService->clear();
+        return $this->json([
+            'success'  => true,
+            'order_id' => $order['id'],
+        ]);
     }
-    #[Route('/commande/confirmation/{id}', name: 'order_confirmation')]
-public function confirmation(int $id): Response
-{
-    // Optional: fetch the order from WooCommerce to display details
-    // $order = $this->wooCommerce->getOrderById($id);
 
-    return $this->render('pages/checkout/confirmation.twig', [
-        'order_id' => $id,
-    ]);
-}
+    #[Route('/commande/confirmation/{id}', name: 'order_confirmation')]
+    public function confirmation(int $id): Response
+    {
+        return $this->render('pages/checkout/confirmation.twig', [
+            'order_id' => $id,
+        ]);
+    }
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
