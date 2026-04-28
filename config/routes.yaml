@@ -47,7 +47,9 @@ cart_state:
     path: /cart/state
     controller: App\Controller\CartController::state
     methods: [GET]
-
+cart_csrf_token:
+    path: /cart/csrf-token
+    controller: App\Controller\CartController::getCsrfToken
 account:
     path: /account
     controller: App\Controller\AccountController::index
@@ -105,3 +107,4 @@ api_search:
     path: /api/search
     controller: App\Controller\SearchController::search
     methods: [GET]
+

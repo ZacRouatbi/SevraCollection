@@ -146,9 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
           recomputeSummary();
           // If completely empty, show empty state
           if (document.querySelectorAll('.cart-item[data-item-key]').length === 0) {
-            document.getElementById('cart-empty').style.display = 'flex';
-            document.getElementById('cart-items-inner').style.display = 'none';
+            const emptyEl = document.getElementById('cart-empty');
+            const innerEl = document.getElementById('cart-items-inner');
+            if (emptyEl) emptyEl.style.display = 'flex';
+            if (innerEl) innerEl.style.display = 'none';
           }
+        } else if (res.status === 403) {
+          toast('Erreur de sécurité. Veuillez rafraîchir la page.');
+          cartCsrfToken = null; // Reset token
         }
       } catch {
         rows.forEach(row => { row.style.opacity = '1'; row.style.pointerEvents = ''; });
@@ -195,11 +200,16 @@ document.addEventListener('DOMContentLoaded', () => {
           headers['X-CSRF-Token'] = token;
         }
 
-        await fetch('/cart/update', {
+        const response = await fetch('/cart/update', {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({ item_key: key, qty: newQty }),
         });
+
+        if (response.status === 403) {
+          toast('Erreur de sécurité. Veuillez rafraîchir la page.');
+          cartCsrfToken = null;
+        }
       } catch { /* Fail silently */ }
     }
   });

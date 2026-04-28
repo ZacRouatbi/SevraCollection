@@ -88,7 +88,12 @@ class Authenticator extends AbstractAuthenticator
 
         // REMOVED: Sensitive JWT payload logging for security
 
-        $wpUserId = (int) ($data['data']['user']['id'] ?? 0);
+        $jwtParts = explode('.', $token);
+        $jwtPayload = json_decode(
+            base64_decode(str_pad($jwtParts[1], strlen($jwtParts[1]) % 4, '=', STR_PAD_RIGHT)),
+            true
+        );
+        $wpUserId = (int) ($jwtPayload['data']['user']['id'] ?? 0);
         $roles = [];
         if (isset($data['roles'])) {
             $roles = (array) $data['roles'];

@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 class CartController extends AbstractController
 {
     // ── Full cart page ────────────────────────────────────────────────
@@ -29,10 +29,10 @@ class CartController extends AbstractController
     // ── CSRF Token endpoint for AJAX requests ────────────────────────
 
     #[Route('/cart/csrf-token', name: 'cart_csrf_token', methods: ['GET'])]
-    public function getCsrfToken(): JsonResponse
+    public function getCsrfToken(CsrfTokenManagerInterface $csrfTokenManager): JsonResponse  // Add the parameter
     {
         return $this->json([
-            'token' => $this->container->get('security.csrf.token_manager')->getToken('cart')->getValue()
+            'token' => $csrfTokenManager->getToken('cart')->getValue()
         ]);
     }
 
