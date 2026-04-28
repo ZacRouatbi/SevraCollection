@@ -190,7 +190,12 @@
 
         <p class="text-center text-xs mt-4 font-light leading-relaxed" style="color:var(--c-mauve)">
           En confirmant, vous acceptez nos
-          <a href="#" class="underline hover:text-olive">conditions générales de vente</a>.
+          {# ✅ FIXED: Use button with onclick instead of href #}
+          <button type="button" onclick="openModal('modal-cgv')"
+                  class="underline hover:text-olive bg-transparent border-none cursor-pointer"
+                  style="color:inherit; font:inherit;">
+            conditions générales de vente
+          </button>.
         </p>
       </div>
     </div>
