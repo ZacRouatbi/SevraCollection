@@ -230,10 +230,10 @@ function initSearch() {
 
     overlay.style.opacity = '1';
 
-    setTimeout(() => {
-      input?.focus();
-      if (!categoriesLoaded) loadCategories();
-    }, 50);
+    // setTimeout(() => {
+    //   input?.focus();
+    //   if (!categoriesLoaded) loadCategories();
+    // }, 50);
   };
 
   const closeSearch = () => {
