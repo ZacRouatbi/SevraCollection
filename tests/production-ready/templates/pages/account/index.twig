@@ -1,0 +1,473 @@
+{# templates/pages/account/index.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon compte — Sevra{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
+
+  <div class="mb-8 lg:mb-10">
+    <span class="label mb-2 block">Espace personnel</span>
+    <h1 class="text-display text-3xl sm:text-4xl lg:text-5xl">
+      {% if user is not null %}
+        Bonjour, <em>{{ user.first_name ?? 'vous' }}</em>
+      {% else %}
+        Mon compte
+      {% endif %}
+    </h1>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+
+    {# ── Sidebar (mobile friendly horizontal scroll) ─────────── #}
+    <aside class="lg:col-span-1">
+      <nav class="flex lg:flex-col gap-2 lg:gap-1 overflow-x-auto pb-2 lg:pb-0 lg:sticky lg:top-24"
+           id="account-nav">
+          {% set sections = [
+            { id: 'info',   label: 'Mes informations' },
+            { id: 'orders', label: 'Mes commandes' },
+            { id: 'logout', label: 'Déconnexion', url: path('logout') },
+          ] %}
+          {% for s in sections %}
+            {% if s.url is defined %}
+              <a href="{{ s.url }}"
+                 class="flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                          text-shadow/50 hover:text-olive transition-colors whitespace-nowrap">
+                <span>{{ s.label }}</span>
+              </a>
+            {% else %}
+              <button data-target="section-{{ s.id }}"
+                      class="acc-nav-btn flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                               text-shadow/50 hover:text-olive transition-colors whitespace-nowrap
+                               {% if loop.first %}text-olive border-l-2 border-olive{% endif %}">
+                {{ s.label }}
+              </button>
+            {% endif %}
+          {% endfor %}
+        </nav>
+    </aside>
+
+    {# ── Content ─────────────────────────────────────────────── #}
+    <div class="lg:col-span-2">
+
+      {# ─ SECTION: Informations ─────────────────────────────── #}
+      <section id="section-info" class="account-section">
+        <p class="font-display italic text-xl sm:text-2xl mb-6">Mes informations</p>
+
+        <form method="POST" action="{{ path('account_update') }}" class="space-y-5">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('account_update') }}">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="input-label" for="acc-first">Prénom</label>
+              <input class="input-field" type="text" id="acc-first" name="first_name"
+                     required value="{{ user.first_name ?? user.name ?? '' }}" placeholder="Prénom">
+            </div>
+            <div>
+              <label class="input-label" for="acc-last">Nom</label>
+              <input class="input-field" type="text" id="acc-last" name="last_name"
+                     required value="{{ user.last_name ?? '' }}" placeholder="Nom">
+            </div>
+          </div>
+
+          <div>
+            <label class="input-label" for="acc-email">E-mail</label>
+            <input class="input-field" type="email" id="acc-email" name="email"
+                   required value="{{ user.email ?? '' }}" placeholder="E-mail">
+          </div>
+
+          <div>
+            <label class="input-label" for="acc-phone">Téléphone</label>
+            <input class="input-field" type="tel" id="acc-phone" name="phone"
+                   value="{{ user.phone ?? '' }}" placeholder="+216 XX XXX XXX">
+          </div>
+
+          <div class="border-t border-olive/15 pt-5">
+            <p class="font-display italic text-base lg:text-lg mb-4 text-shadow">Adresse de livraison par défaut</p>
+            <div class="space-y-4">
+              <div>
+                <label class="input-label" for="acc-addr">Adresse</label>
+                <input class="input-field" type="text" id="acc-addr" name="address"
+                       value="{{ user.address ?? '' }}" placeholder="Adresse">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="input-label" for="acc-city">Ville</label>
+                  <input class="input-field" type="text" id="acc-city" name="city"
+                         value="{{ user.city ?? '' }}" placeholder="Tunis">
+                </div>
+                <div>
+                  <label class="input-label" for="acc-zip">Code postal</label>
+                  <input class="input-field" type="text" id="acc-zip" name="zip"
+                         value="{{ user.zip ?? '' }}" placeholder="1000">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-olive/15 pt-5">
+            <p class="font-display italic text-base lg:text-lg mb-4 text-shadow">Changer le mot de passe</p>
+            <div class="space-y-4">
+              <div>
+                <label class="input-label" for="acc-pw-current">Mot de passe actuel</label>
+                <input class="input-field" type="password" id="acc-pw-current" name="current_password"
+                       placeholder="••••••••">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="input-label" for="acc-pw-new">Nouveau</label>
+                  <input class="input-field" type="password" id="acc-pw-new" name="new_password"
+                         placeholder="••••••••">
+                </div>
+                <div>
+                  <label class="input-label" for="acc-pw-confirm">Confirmer</label>
+                  <input class="input-field" type="password" id="acc-pw-confirm" name="confirm_password"
+                         placeholder="••••••••">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary w-full sm:w-auto">Enregistrer les modifications</button>
+        </form>
+      </section>
+
+      {# ─ SECTION: Orders (with AJAX pagination) ─────────────── #}
+      <section id="section-orders" class="account-section hidden">
+        <p class="font-display italic text-xl sm:text-2xl mb-6">Mes commandes</p>
+
+    {% if orders is not empty %}
+      <div id="orders-container" data-page="1" data-per-page="{{ per_page }}" data-total="{{ total_orders }}">
+        {% for order in orders %}
+          {# ✅ FIXED: Add data-iso-date attribute #}
+          <div class="order-item bg-white/60 border border-olive/10 mb-4 last:mb-0">
+            <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p class="font-display italic text-base sm:text-lg">Commande #{{ order.number }}</p>
+                <p class="text-xs text-mauve font-light mt-0.5"
+                   data-iso-date="{{ order.date }}">
+                  {{ order.date is defined and order.date ? order.date|date('d/m/Y') : '—' }}
+                </p>
+              </div>
+              <span class="label px-3 py-1 self-start sm:self-auto text-xs"
+                    style="background:var(--c-linen-deep);
+                           color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
+                {{ order.status ?? 'En cours' }}
+              </span>
+            </div>
+            {% if order.items is defined and order.items is not empty %}
+              <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">
+                {% for item in order.items %}
+                  <div class="flex items-center gap-3 sm:gap-4">
+                    <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
+                         class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm text-shadow truncate">{{ item.name }}</p>
+                      <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
+                    </div>
+                    <p class="text-sm font-display italic text-olive whitespace-nowrap">
+                      {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
+                    </p>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <p class="text-sm font-light text-shadow/60">
+                {{ order.items|default([])|length }} article(s)
+              </p>
+              <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
+                {{ order.total }} DT
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div id="orders-loading" class="hidden flex justify-center py-4">
+        <svg class="animate-spin h-6 w-6 text-olive" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <div id="orders-pagination" class="flex justify-center items-center gap-2 mt-6"></div>
+
+    {% else %}
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <p class="font-display italic text-xl sm:text-2xl text-shadow/30 mb-2">Aucune commande</p>
+        <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
+        <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
+      </div>
+    {% endif %}
+      </section>
+
+  </div>
+</div>
+</div>
+
+{# ── Pagination & tab switching script ─────────────── #}
+<script>
+  (function() {
+    // ── Tab switching ────────────────────────────────────────────
+    const nav = document.getElementById('account-nav');
+    if (nav) {
+      nav.addEventListener('click', (e) => {
+        const btn = e.target.closest('.acc-nav-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const targetId = btn.dataset.target;
+        if (!targetId) return;
+
+        document.querySelectorAll('.account-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(targetId).classList.remove('hidden');
+
+        document.querySelectorAll('.acc-nav-btn').forEach(b => {
+          b.classList.remove('text-olive', 'border-l-2', 'border-olive');
+        });
+        btn.classList.add('text-olive', 'border-l-2', 'border-olive');
+
+        if (targetId === 'section-orders') {
+          initOrdersPagination();
+        }
+      });
+    }
+
+    // ── Orders pagination with prefetch ────────────────────────
+    let currentPage = 1;
+    const cachedPages = {};
+
+    const ordersContainer = document.getElementById('orders-container');
+    const paginationDiv   = document.getElementById('orders-pagination');
+    const loadingIndicator = document.getElementById('orders-loading');
+
+    let totalPages = 1;
+    let perPage = 5;
+
+    // ✅ FIXED: Extract order data from existing HTML (page 1) - now uses data-iso-date
+    function extractOrdersFromDOM() {
+      const items = ordersContainer.querySelectorAll('.order-item');
+      const orders = [];
+      items.forEach(el => {
+        const numberEl = el.querySelector('.font-display.italic');
+        const dateEl   = el.querySelector('.text-mauve');
+        const statusEl = el.querySelector('.label');
+        const totalEl  = el.querySelector('.font-display.italic.text-base');
+        const articleCountEl = el.querySelector('.text-shadow\\/60');
+
+        const itemsList = [];
+        const itemRows = el.querySelectorAll('.flex.items-center.gap-3');
+        itemRows.forEach(row => {
+          const img = row.querySelector('img');
+          const nameEl = row.querySelector('.font-medium');
+          const qtyPriceEl = row.querySelector('.text-mauve-light');
+          const totalPriceEl = row.querySelector('.font-display.italic.text-olive');
+
+          if (img && nameEl && qtyPriceEl && totalPriceEl) {
+            const quantityPriceText = qtyPriceEl.textContent.trim(); // "Qté : 2 × 85 DT"
+            const parts = quantityPriceText.match(/Qté\s*:\s*(\d+)\s*×\s*([\d\.]+)\s*DT/);
+            itemsList.push({
+              image: img.getAttribute('src'),
+              name: nameEl.textContent.trim(),
+              quantity: parts ? parseInt(parts[1]) : 1,
+              price: parts ? parts[2] : '0',
+            });
+          }
+        });
+
+        // ✅ FIXED: Use data-iso-date attribute instead of text content
+        const isoDate = dateEl ? dateEl.dataset.isoDate : null;
+        
+        orders.push({
+          number: numberEl ? numberEl.textContent.replace('Commande #', '').trim() : '',
+          date: isoDate || '',  // Store ISO date string
+          status: statusEl ? statusEl.textContent.trim() : 'En cours',
+          total: totalEl ? totalEl.textContent.trim().replace(' DT', '') : '0',
+          items: itemsList,
+        });
+      });
+      return orders;
+    }
+
+    // ── Build HTML for an order card ────────────────────────
+    function createOrderCard(order) {
+      const div = document.createElement('div');
+      div.className = 'order-item bg-white/60 border border-olive/10 mb-4 last:mb-0';
+
+      let itemsHtml = '';
+      if (order.items && order.items.length > 0) {
+        itemsHtml = '<div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">';
+        order.items.forEach(item => {
+          const imgSrc = item.image || '/images/placeholder.jpg';
+          const totalPrice = (item.quantity * parseFloat(item.price)).toLocaleString('fr-TN', { minimumFractionDigits: 2 });
+          itemsHtml += `
+              <div class="flex items-center gap-3 sm:gap-4">
+                <img src="${imgSrc}" alt="${item.name}"
+                     class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-sm text-shadow truncate">${item.name}</p>
+                  <p class="text-xs text-mauve-light">Qté : ${item.quantity} × ${item.price} DT</p>
+                </div>
+                <p class="text-sm font-display italic text-olive whitespace-nowrap">${totalPrice} DT</p>
+              </div>`;
+        });
+        itemsHtml += '</div>';
+      }
+
+      const statusColor = order.status === 'completed' ? 'var(--c-olive)' : 'var(--c-mauve)';
+      const articleCount = order.items ? order.items.length : 0;
+
+      // ✅ FIXED: Properly format the date from ISO string
+      let dateDisplay = '—';
+      if (order.date && order.date !== '') {
+        const dateObj = new Date(order.date);
+        if (!isNaN(dateObj.getTime())) {
+          dateDisplay = dateObj.toLocaleDateString('fr-TN');
+        }
+      }
+
+      div.innerHTML = `
+        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p class="font-display italic text-base sm:text-lg">Commande #${order.number}</p>
+            <p class="text-xs text-mauve font-light mt-0.5">${dateDisplay}</p>
+          </div>
+          <span class="label px-3 py-1 self-start sm:self-auto text-xs"
+                style="background:var(--c-linen-deep); color:${statusColor}">
+            ${order.status || 'En cours'}
+          </span>
+        </div>
+        ${itemsHtml}
+        <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <p class="text-sm font-light text-shadow/60">${articleCount} article(s)</p>
+          <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
+            ${order.total} DT
+          </p>
+        </div>`;
+      return div;
+    }
+
+    // ── Replace container with cached data ───────────────────────
+    function replaceOrdersWithCache(page) {
+      if (!ordersContainer) return;
+      ordersContainer.innerHTML = '';
+      const orders = cachedPages[page];
+      if (!orders || !Array.isArray(orders)) return;
+      orders.forEach(order => {
+        ordersContainer.appendChild(createOrderCard(order));
+      });
+    }
+
+    // ── Fetch and cache a page ────────────────────────────────
+    async function fetchPage(page) {
+      if (cachedPages[page]) return cachedPages[page];
+      try {
+        const response = await fetch(`/account?page=${page}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        cachedPages[page] = data.orders;
+        return data.orders;
+      } catch (err) {
+        console.error('Failed to fetch page', page, err);
+        return [];
+      }
+    }
+
+    // ── Load and display a specific page ────────────────────
+    async function loadPage(page) {
+      if (page < 1 || page > totalPages) return;
+      if (page === currentPage) return;
+      currentPage = page;
+
+      if (cachedPages[page]) {
+        replaceOrdersWithCache(page);
+      } else {
+        loadingIndicator?.classList.remove('hidden');
+        await fetchPage(page);
+        replaceOrdersWithCache(page);
+        loadingIndicator?.classList.add('hidden');
+      }
+
+      // Update total pages in case data changed
+      const perPage = parseInt(ordersContainer.dataset.perPage) || 5;
+      const total = parseInt(ordersContainer.dataset.total) || 0;
+      totalPages = Math.ceil(total / perPage);
+
+      renderPaginationButtons(totalPages);
+
+      // Prefetch next page
+      const nextPage = page + 1;
+      if (nextPage <= totalPages && !cachedPages[nextPage]) {
+        fetchPage(nextPage);
+      }
+    }
+
+    // ── Render pagination buttons ──────────────────────────
+    function renderPaginationButtons(totalPagesCount) {
+      if (!paginationDiv) return;
+      paginationDiv.innerHTML = '';
+      if (totalPagesCount <= 1) return;
+
+      // Prev
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = '←';
+      prevBtn.className = 'px-3 py-1 text-sm border border-olive/30 text-olive hover:bg-olive/10 disabled:opacity-40';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) loadPage(currentPage - 1);
+      });
+      paginationDiv.appendChild(prevBtn);
+
+      // Page numbers
+      for (let i = 1; i <= totalPagesCount; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.className = 'px-3 py-1 text-sm border border-olive/20 hover:bg-olive/10';
+        if (i === currentPage) {
+          pageBtn.classList.add('bg-olive', 'text-white', 'border-olive');
+        }
+        pageBtn.addEventListener('click', () => {
+          if (i !== currentPage) loadPage(i);
+        });
+        paginationDiv.appendChild(pageBtn);
+      }
+
+      // Next
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = '→';
+      nextBtn.className = 'px-3 py-1 text-sm border border-olive/30 text-olive hover:bg-olive/10 disabled:opacity-40';
+      nextBtn.disabled = currentPage === totalPagesCount;
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPagesCount) loadPage(currentPage + 1);
+      });
+      paginationDiv.appendChild(nextBtn);
+    }
+
+    // ── Initialise (called when Orders tab becomes visible) ──
+    function initOrdersPagination() {
+      if (!ordersContainer || !paginationDiv) return;
+      perPage = parseInt(ordersContainer.dataset.perPage) || 5;
+      const total = parseInt(ordersContainer.dataset.total) || 0;
+      totalPages = Math.ceil(total / perPage);
+
+      // ✅ FIXED: Cache page 1 from the existing static HTML (convert to data objects) - now with ISO dates
+      if (!cachedPages[1]) {
+        cachedPages[1] = extractOrdersFromDOM();
+      }
+
+      renderPaginationButtons(totalPages);
+
+      // Prefetch page 2 if it exists
+      if (totalPages >= 2 && !cachedPages[2]) {
+        fetchPage(2);
+      }
+    }
+
+    // If orders section already visible on page load, init
+    if (document.getElementById('section-orders') && !document.getElementById('section-orders').classList.contains('hidden')) {
+      initOrdersPagination();
+    }
+  })();
+</script>
+{% endblock %}

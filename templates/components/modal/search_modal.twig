@@ -1,6 +1,6 @@
 {# templates/components/modal/search_modal.twig #}
 <div id="search-overlay" class="fixed inset-0 z-[999] flex items-start justify-center pt-20 md:pt-32 px-6"
-     style="opacity:0; visibility:hidden; pointer-events:none; background-color: rgba(253,250,247,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);">
+      style="opacity:0; visibility:hidden; pointer-events:none; background-color: rgba(253,250,247,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);">
 
     <div class="relative w-full max-w-3xl" id="search-content">
         {# Close Button #}
@@ -14,11 +14,22 @@
         <input type="text" id="search-input" placeholder="Que recherchez-vous ?" autocomplete="off"
                class="w-full bg-transparent text-2xl md:text-5xl font-display italic text-shadow border-b border-shadow/10 outline-none pb-4 placeholder:text-shadow/20">
 
-        {# Results dropdown – now matches overlay background #}
+        {# Results dropdown #}
         <div id="search-results" class="hidden mt-4 max-h-[60vh] overflow-y-auto rounded-sm shadow-2xl border border-olive/10"
              style="background: rgba(253,250,247,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
         </div>
 
+        {# ✅ FIXED: 2 simple redirect buttons (always visible) #}
+        <div class="mt-4 flex flex-wrap gap-2">
+            <button onclick="window.location.href='/shop'"
+                    class="px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm">
+                Ensemble Lin
+            </button>
+            <button onclick="window.location.href='/gallery'"
+                    class="px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm">
+                Nouveautés
+            </button>
+        </div>
 
     </div>
 </div>
@@ -30,70 +41,49 @@
     const resultsDiv = document.getElementById('search-results');
     const closeBtn   = document.getElementById('search-close');
 
+    if (!overlay || !input) return;
+
     let debounceTimer;
 
-    // ── Open / Close logic ──────────────────────────────────
+    // ✅ FIXED: Pure CSS transitions (no GSAP)
+    const openSearch = () => {
+      overlay.style.transition = 'opacity 0.4s ease';
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'visible';
+      overlay.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'hidden';
+
+      // Trigger reflow
+      overlay.offsetHeight;
+
+      overlay.style.opacity = '1';
+
+      setTimeout(() => {
+        input?.focus();
+      }, 50);
+    };
+
+    const closeSearch = () => {
+      overlay.style.transition = 'opacity 0.3s ease';
+      overlay.style.opacity = '0';
+
+      setTimeout(() => {
+        overlay.style.visibility = 'hidden';
+        overlay.style.pointerEvents = 'none';
+        document.body.style.overflow = '';
+        resetSearch();
+      }, 300);
+    };
+
     function resetSearch() {
       input.value = '';
       resultsDiv.innerHTML = '';
       resultsDiv.classList.add('hidden');
     }
 
-    window.openSearch = function() {
-      overlay.style.opacity = '1';
-      overlay.style.visibility = 'visible';
-      overlay.style.pointerEvents = 'auto';
-      resetSearch();
-      input.focus();
-    };
+    window.openSearch = openSearch;
 
-    function closeSearch() {
-      overlay.style.opacity = '0';
-      overlay.style.visibility = 'hidden';
-      overlay.style.pointerEvents = 'none';
-      resetSearch();
-    }
-
-    closeBtn.addEventListener('click', closeSearch);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeSearch();
-    });
-
-    // ── Load categories (cached via server) ─────────────────
-    async function loadCategories() {
-      try {
-        const res = await fetch('/api/categories');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const categories = await res.json();
-        renderSuggestions(categories);
-      } catch (err) {
-        // Fallback if API fails
-        renderSuggestions([
-          { name: 'Ensemble Lin', slug: 'ensemble-lin' },
-          { name: 'Nouveautés',   slug: 'nouveautes' }
-        ]);
-      }
-    }
-
-    function renderSuggestions(categories) {
-      if (!categories || categories.length === 0) {
-        suggestionsDiv.innerHTML = '';
-        return;
-      }
-      suggestionsDiv.innerHTML = '';
-      categories.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm';
-        btn.textContent = cat.name;
-        btn.addEventListener('click', () => {
-          window.location.href = '/shop?category=' + encodeURIComponent(cat.slug);
-        });
-        suggestionsDiv.appendChild(btn);
-      });
-      categoriesLoaded = true;
-    }
-
-    // ── Live search with debounce ───────────────────────────
+    // ✅ Live search with debounce
     input.addEventListener('input', function() {
       const query = this.value.trim();
       clearTimeout(debounceTimer);
@@ -129,11 +119,15 @@
       }, 300);
     });
 
+    // Close buttons
+    closeBtn?.addEventListener('click', closeSearch);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeSearch();
+    });
+
     // Close when pressing Escape
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.style.visibility === 'visible') {
-        closeSearch();
-      }
+      if (e.key === 'Escape' && overlay.style.visibility === 'visible') closeSearch();
     });
   })();
 </script>

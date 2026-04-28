@@ -1,9 +1,5 @@
-// sevra.js - Updated with CSRF token handling for cart operations
-
-/**
- * sevra.js — Sevra Collection frontend interactions
- * Handles: auth modal, cart drawer, quantity steppers, search, toast, page transitions
- */
+// sevra.js - Sevra Collection frontend interactions
+// Handles: auth modal, cart drawer, quantity steppers, search, toast, page transitions
 
 // ✅ CSRF Token cache for cart operations
 let cartCsrfToken = null;
@@ -79,7 +75,7 @@ class AuthModal {
   }
 }
 
-/* ─── Cart Drawer ────────────────────────────────────────────── */
+/* ─── Cart Drawer ────────────────────────────────────── */
 class CartDrawer {
   constructor() {
     this.drawer  = document.getElementById('cart-drawer');
@@ -122,7 +118,6 @@ function initAddToCart() {
       if (btn) btn.disabled = true;
 
       try {
-        // ✅ Get CSRF token before request
         const token = await getCartCsrfToken();
         const headers = {
           'X-Requested-With': 'XMLHttpRequest'
@@ -156,7 +151,7 @@ function initAddToCart() {
   });
 }
 
-/* ─── Quantity Stepper ───────────────────────────────────────── */
+/* ─── Quantity Stepper ───────────────────────────────── */
 function initQtySteppers() {
   document.querySelectorAll('.qty-stepper').forEach(stepper => {
     const display = stepper.querySelector('span');
@@ -179,7 +174,7 @@ function triggerQtyChange(stepper, val) {
   stepper.dispatchEvent(new CustomEvent('qty:change', { detail: { qty: val }, bubbles: true }));
 }
 
-/* ─── Size Selector ──────────────────────────────────────────── */
+/* ─── Size Selector ──────────────────────────────────── */
 function initSizeSelector() {
   document.querySelectorAll('.size-selector').forEach(group => {
     group.querySelectorAll('.size-btn:not(.out-of-stock)').forEach(btn => {
@@ -216,34 +211,51 @@ function applyFilters() {
   });
 }
 
-/* ─── Search ─────────────────────────────────────────────────── */
+/* ─── Search ─────────────────────────────────────────── */
 function initSearch() {
   const overlay = document.getElementById('search-overlay');
   const input   = document.getElementById('search-input');
   if (!overlay) return;
 
+  // ✅ FIXED: Pure CSS transitions instead of GSAP
   const openSearch = () => {
-    overlay.style.visibility    = 'visible';
+    overlay.style.transition = 'opacity 0.4s ease';
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'visible';
     overlay.style.pointerEvents = 'auto';
     document.body.style.overflow = 'hidden';
-    gsap.fromTo(overlay,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.4, ease: 'power2.out',
-        onComplete: () => setTimeout(() => input?.focus(), 50) }
-    );
+
+    // Trigger reflow before starting transition
+    overlay.offsetHeight;
+
+    overlay.style.opacity = '1';
+
+    setTimeout(() => {
+      input?.focus();
+      if (!categoriesLoaded) loadCategories();
+    }, 50);
   };
 
   const closeSearch = () => {
-    gsap.to(overlay, {
-      opacity: 0, duration: 0.3,
-      onComplete: () => {
-        overlay.style.visibility    = 'hidden';
-        overlay.style.pointerEvents = 'none';
-        document.body.style.overflow = '';
-        if (input) input.value = '';
-      }
-    });
+    overlay.style.transition = 'opacity 0.3s ease';
+    overlay.style.opacity = '0';
+
+    setTimeout(() => {
+      overlay.style.visibility = 'hidden';
+      overlay.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
+      if (input) input.value = '';
+      resetSearch();
+    }, 300);
   };
+
+  function resetSearch() {
+    if (input) input.value = '';
+    resultsDiv.innerHTML = '';
+    resultsDiv.classList.add('hidden');
+    suggestionsDiv.innerHTML = '';
+    suggestionsDiv.classList.add('hidden');
+  }
 
   document.querySelectorAll('[data-search-open]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.preventDefault(); openSearch(); });
@@ -255,15 +267,83 @@ function initSearch() {
     if (e.key === 'Escape' && overlay.style.visibility === 'visible') closeSearch();
   });
 
+  let debounceTimer;
+  let categoriesLoaded = false;
+  const resultsDiv = document.getElementById('search-results');
+  const suggestionsDiv = document.getElementById('search-suggestions');
+
+  // ── Load categories (cached via server) ─────────────────
+  async function loadCategories() {
+    try {
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const categories = await res.json();
+      renderSuggestions(categories);
+    } catch (err) {
+      // Fallback if API fails
+      renderSuggestions([
+        { name: 'Ensemble Lin', slug: 'ensemble-lin' },
+        { name: 'Nouveautés',   slug: 'nouveautes' }
+      ]);
+    }
+  }
+
+  function renderSuggestions(categories) {
+    if (!categories || categories.length === 0) {
+      suggestionsDiv.innerHTML = '';
+      return;
+    }
+    suggestionsDiv.innerHTML = '';
+    suggestionsDiv.classList.remove('hidden');
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm';
+      btn.textContent = cat.name;
+      btn.addEventListener('click', () => {
+        window.location.href = '/shop?category=' + encodeURIComponent(cat.slug);
+      });
+      suggestionsDiv.appendChild(btn);
+    });
+    categoriesLoaded = true;
+  }
+
   input?.addEventListener('input', debounce(e => {
     const q = e.target.value.trim();
-    if (q.length >= 2) {
-      // TODO: fetch suggestions from API
+    clearTimeout(debounceTimer);
+
+    if (q.length < 2) {
+      resultsDiv.innerHTML = '';
+      resultsDiv.classList.add('hidden');
+      return;
     }
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const products = await res.json();
+        if (products.length === 0) {
+          resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-mauve">Aucun résultat</div>';
+        } else {
+          resultsDiv.innerHTML = products.map(p => `
+            <a href="/produit/${p.slug}" class="flex items-center gap-4 p-3 hover:bg-white/30 transition-colors border-b border-shadow/5 last:border-0">
+              <img src="${p.image}" alt="${p.name}" class="w-12 h-16 object-cover flex-shrink-0" />
+              <div class="flex-1 min-w-0">
+                <p class="font-display italic text-sm text-shadow">${p.name}</p>
+                <p class="text-xs text-mauve">${p.price} DT</p>
+              </div>
+            </a>
+          `).join('');
+        }
+        resultsDiv.classList.remove('hidden');
+      } catch (err) {
+        resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-red-400">Erreur de recherche</div>';
+        resultsDiv.classList.remove('hidden');
+      }
+    }, 300);
   }, 300));
 }
 
-/* ─── Toast ──────────────────────────────────────────────────── */
+/* ─── Toast ─────────────────────────────────────────── */
 function showToast(message, duration = 2800) {
   let toast = document.querySelector('.toast');
   if (!toast) {
@@ -291,13 +371,13 @@ function initHeaderScroll() {
   }, { passive: true });
 }
 
-/* ─── Utils ──────────────────────────────────────────────────── */
+/* ─── Utils ─────────────────────────────────────────── */
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-/* ─── Boot ───────────────────────────────────────────────────── */
+/* ─── Boot ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   new AuthModal();
   new CartDrawer();

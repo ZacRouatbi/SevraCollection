@@ -10,7 +10,7 @@
     <span class="label mb-2 block">Espace personnel</span>
     <h1 class="text-display text-3xl sm:text-4xl lg:text-5xl">
       {% if user is not null %}
-        Bonjour, <em>{{ user.first_name ?? 'vous' }}.</em>
+        Bonjour, <em>{{ user.first_name ?? 'vous' }}</em>
       {% else %}
         Mon compte
       {% endif %}
@@ -23,28 +23,28 @@
     <aside class="lg:col-span-1">
       <nav class="flex lg:flex-col gap-2 lg:gap-1 overflow-x-auto pb-2 lg:pb-0 lg:sticky lg:top-24"
            id="account-nav">
-        {% set sections = [
-          { id: 'info',   label: 'Mes informations' },
-          { id: 'orders', label: 'Mes commandes' },
-          { id: 'logout', label: 'Déconnexion', url:path('logout') },
-        ] %}
-        {% for s in sections %}
-          {% if s.url is defined %}
-            <a href="{{ s.url }}"
-               class="flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
-                      text-shadow/50 hover:text-olive transition-colors whitespace-nowrap">
-              <span>{{ s.label }}</span>
-            </a>
-          {% else %}
-            <button data-target="section-{{ s.id }}"
-                    class="acc-nav-btn flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
-                           text-shadow/50 hover:text-olive transition-colors whitespace-nowrap
-                           {% if loop.first %}text-olive border-l-2 border-olive{% endif %}">
-              {{ s.label }}
-            </button>
-          {% endif %}
-        {% endfor %}
-      </nav>
+          {% set sections = [
+            { id: 'info',   label: 'Mes informations' },
+            { id: 'orders', label: 'Mes commandes' },
+            { id: 'logout', label: 'Déconnexion', url: path('logout') },
+          ] %}
+          {% for s in sections %}
+            {% if s.url is defined %}
+              <a href="{{ s.url }}"
+                 class="flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                          text-shadow/50 hover:text-olive transition-colors whitespace-nowrap">
+                <span>{{ s.label }}</span>
+              </a>
+            {% else %}
+              <button data-target="section-{{ s.id }}"
+                      class="acc-nav-btn flex-shrink-0 lg:flex-shrink flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-body font-light
+                               text-shadow/50 hover:text-olive transition-colors whitespace-nowrap
+                               {% if loop.first %}text-olive border-l-2 border-olive{% endif %}">
+                {{ s.label }}
+              </button>
+            {% endif %}
+          {% endfor %}
+        </nav>
     </aside>
 
     {# ── Content ─────────────────────────────────────────────── #}
@@ -56,6 +56,7 @@
 
         <form method="POST" action="{{ path('account_update') }}" class="space-y-5">
           <input type="hidden" name="_csrf_token" value="{{ csrf_token('account_update') }}">
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="input-label" for="acc-first">Prénom</label>
@@ -131,85 +132,84 @@
         </form>
       </section>
 
-      {# ─ SECTION: Orders (with pagination) ───────────────────── #}
       {# ─ SECTION: Orders (with AJAX pagination) ─────────────── #}
-<section id="section-orders" class="account-section hidden">
-  <p class="font-display italic text-xl sm:text-2xl mb-6">Mes commandes</p>
+      <section id="section-orders" class="account-section hidden">
+        <p class="font-display italic text-xl sm:text-2xl mb-6">Mes commandes</p>
 
-  {% if orders is not empty %}
-    <div id="orders-container" data-page="1" data-per-page="{{ per_page }}"
-     data-total="{{ total_orders }}">
-      {% for order in orders %}
-        {# ... same order card markup as before ... #}
-        <div class="order-item bg-white/60 border border-olive/10 mb-4 last:mb-0">
-          <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <p class="font-display italic text-base sm:text-lg">Commande #{{ order.number }}</p>
-              <p class="text-xs text-mauve font-light mt-0.5">
-                {{ order.date is defined and order.date ? order.date|date('d/m/Y') : '—' }}
+    {% if orders is not empty %}
+      <div id="orders-container" data-page="1" data-per-page="{{ per_page }}" data-total="{{ total_orders }}">
+        {% for order in orders %}
+          {# ✅ FIXED: Add data-iso-date attribute #}
+          <div class="order-item bg-white/60 border border-olive/10 mb-4 last:mb-0">
+            <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p class="font-display italic text-base sm:text-lg">Commande #{{ order.number }}</p>
+                <p class="text-xs text-mauve font-light mt-0.5"
+                   data-iso-date="{{ order.date }}">
+                  {{ order.date is defined and order.date ? order.date|date('d/m/Y') : '—' }}
+                </p>
+              </div>
+              <span class="label px-3 py-1 self-start sm:self-auto text-xs"
+                    style="background:var(--c-linen-deep);
+                           color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
+                {{ order.status ?? 'En cours' }}
+              </span>
+            </div>
+            {% if order.items is defined and order.items is not empty %}
+              <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">
+                {% for item in order.items %}
+                  <div class="flex items-center gap-3 sm:gap-4">
+                    <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
+                         class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm text-shadow truncate">{{ item.name }}</p>
+                      <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
+                    </div>
+                    <p class="text-sm font-display italic text-olive whitespace-nowrap">
+                      {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
+                    </p>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <p class="text-sm font-light text-shadow/60">
+                {{ order.items|default([])|length }} article(s)
+              </p>
+              <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
+                {{ order.total }} DT
               </p>
             </div>
-            <span class="label px-3 py-1 self-start sm:self-auto text-xs"
-                  style="background:var(--c-linen-deep);
-                         color:{% if order.status == 'completed' %}var(--c-olive){% else %}var(--c-mauve){% endif %}">
-              {{ order.status ?? 'En cours' }}
-            </span>
           </div>
-          {% if order.items is defined and order.items is not empty %}
-            <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">
-              {% for item in order.items %}
-                <div class="flex items-center gap-3 sm:gap-4">
-                  <img src="{{ item.image ?? '/images/placeholder.jpg' }}" alt="{{ item.name }}"
-                       class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium text-sm text-shadow truncate">{{ item.name }}</p>
-                    <p class="text-xs text-mauve-light">Qté : {{ item.quantity }} × {{ item.price }} DT</p>
-                  </div>
-                  <p class="text-sm font-display italic text-olive whitespace-nowrap">
-                    {{ (item.quantity * item.price)|number_format(2, '.', ' ') }} DT
-                  </p>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-          <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <p class="text-sm font-light text-shadow/60">
-              {{ order.items|default([])|length }} article(s)
-            </p>
-            <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
-              {{ order.total }} DT
-            </p>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+        {% endfor %}
+      </div>
 
-    <div id="orders-loading" class="hidden flex justify-center py-4">
-      <svg class="animate-spin h-6 w-6 text-olive" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-    </div>
+      <div id="orders-loading" class="hidden flex justify-center py-4">
+        <svg class="animate-spin h-6 w-6 text-olive" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
 
-    <div id="orders-pagination" class="flex justify-center items-center gap-2 mt-6"></div>
+      <div id="orders-pagination" class="flex justify-center items-center gap-2 mt-6"></div>
 
-  {% else %}
-    <div class="flex flex-col items-center justify-center py-16 text-center">
-      <p class="font-display italic text-xl sm:text-2xl text-shadow/30 mb-2">Aucune commande</p>
-      <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
-      <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
-    </div>
-  {% endif %}
-</section>
+    {% else %}
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <p class="font-display italic text-xl sm:text-2xl text-shadow/30 mb-2">Aucune commande</p>
+        <p class="text-sm text-mauve font-light mb-6">Vous n'avez pas encore passé de commande.</p>
+        <a href="{{ path('shop') }}" class="btn-outline">Parcourir la collection</a>
+      </div>
+    {% endif %}
+      </section>
 
-    </div>
   </div>
+</div>
 </div>
 
 {# ── Pagination & tab switching script ─────────────── #}
 <script>
   (function() {
-    // ── Tab switching ─────────────────────────────────────────
+    // ── Tab switching ────────────────────────────────────────────
     const nav = document.getElementById('account-nav');
     if (nav) {
       nav.addEventListener('click', (e) => {
@@ -233,7 +233,7 @@
       });
     }
 
-    // ── Orders pagination with prefetch ───────────────────────
+    // ── Orders pagination with prefetch ────────────────────────
     let currentPage = 1;
     const cachedPages = {};
 
@@ -244,7 +244,7 @@
     let totalPages = 1;
     let perPage = 5;
 
-    // Helper: extract order data from the existing HTML (page 1)
+    // ✅ FIXED: Extract order data from existing HTML (page 1) - now uses data-iso-date
     function extractOrdersFromDOM() {
       const items = ordersContainer.querySelectorAll('.order-item');
       const orders = [];
@@ -261,7 +261,7 @@
           const img = row.querySelector('img');
           const nameEl = row.querySelector('.font-medium');
           const qtyPriceEl = row.querySelector('.text-mauve-light');
-          const totalPriceEl = row.querySelector('.font-display.italic');
+          const totalPriceEl = row.querySelector('.font-display.italic.text-olive');
 
           if (img && nameEl && qtyPriceEl && totalPriceEl) {
             const quantityPriceText = qtyPriceEl.textContent.trim(); // "Qté : 2 × 85 DT"
@@ -275,9 +275,12 @@
           }
         });
 
+        // ✅ FIXED: Use data-iso-date attribute instead of text content
+        const isoDate = dateEl ? dateEl.dataset.isoDate : null;
+
         orders.push({
           number: numberEl ? numberEl.textContent.replace('Commande #', '').trim() : '',
-          date: dateEl ? dateEl.textContent.trim() : '',
+          date: isoDate || '',  // Store ISO date string
           status: statusEl ? statusEl.textContent.trim() : 'En cours',
           total: totalEl ? totalEl.textContent.trim().replace(' DT', '') : '0',
           items: itemsList,
@@ -286,7 +289,7 @@
       return orders;
     }
 
-    // ── Build HTML for an order card ─────────────────────────
+    // ── Build HTML for an order card ────────────────────────
     function createOrderCard(order) {
       const div = document.createElement('div');
       div.className = 'order-item bg-white/60 border border-olive/10 mb-4 last:mb-0';
@@ -296,17 +299,17 @@
         itemsHtml = '<div class="border-t border-shadow/8 px-4 sm:px-5 py-3 space-y-3">';
         order.items.forEach(item => {
           const imgSrc = item.image || '/images/placeholder.jpg';
-          const totalPrice = (item.quantity * item.price).toLocaleString('fr-TN', { minimumFractionDigits: 2 });
+          const totalPrice = (item.quantity * parseFloat(item.price)).toLocaleString('fr-TN', { minimumFractionDigits: 2 });
           itemsHtml += `
-            <div class="flex items-center gap-3 sm:gap-4">
-              <img src="${imgSrc}" alt="${item.name}"
-                   class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-sm text-shadow truncate">${item.name}</p>
-                <p class="text-xs text-mauve-light">Qté : ${item.quantity} × ${item.price} DT</p>
-              </div>
-              <p class="text-sm font-display italic text-olive whitespace-nowrap">${totalPrice} DT</p>
-            </div>`;
+              <div class="flex items-center gap-3 sm:gap-4">
+                <img src="${imgSrc}" alt="${item.name}"
+                     class="w-12 h-16 sm:w-16 sm:h-20 object-cover flex-shrink-0 border border-shadow/10">
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-sm text-shadow truncate">${item.name}</p>
+                  <p class="text-xs text-mauve-light">Qté : ${item.quantity} × ${item.price} DT</p>
+                </div>
+                <p class="text-sm font-display italic text-olive whitespace-nowrap">${totalPrice} DT</p>
+              </div>`;
         });
         itemsHtml += '</div>';
       }
@@ -314,27 +317,37 @@
       const statusColor = order.status === 'completed' ? 'var(--c-olive)' : 'var(--c-mauve)';
       const articleCount = order.items ? order.items.length : 0;
 
+      // ✅ FIXED: Properly format the date from ISO string
+      let dateDisplay = '—';
+      if (order.date && order.date !== '') {
+        const dateObj = new Date(order.date);
+        if (!isNaN(dateObj.getTime())) {
+          dateDisplay = dateObj.toLocaleDateString('fr-TN');
+        }
+      }
+
       div.innerHTML = `
         <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <p class="font-display italic text-base sm:text-lg">Commande #${order.number}</p>
-            <p class="text-xs text-mauve font-light mt-0.5">${(order.date && !isNaN(new Date(order.date).getTime()))
-    ? new Date(order.date).toLocaleDateString('fr-TN')
-    : '—'}</p>
+            <p class="text-xs text-mauve font-light mt-0.5">${dateDisplay}</p>
           </div>
-          <span class="label px-3 py-1 self-start sm:self-auto text-xs" style="background:var(--c-linen-deep); color:${statusColor}">
+          <span class="label px-3 py-1 self-start sm:self-auto text-xs"
+                style="background:var(--c-linen-deep); color:${statusColor}">
             ${order.status || 'En cours'}
           </span>
         </div>
         ${itemsHtml}
         <div class="border-t border-shadow/8 px-4 sm:px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <p class="text-sm font-light text-shadow/60">${articleCount} article(s)</p>
-          <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">${order.total} DT</p>
+          <p class="font-display italic text-base sm:text-lg" style="color:var(--c-olive)">
+            ${order.total} DT
+          </p>
         </div>`;
       return div;
     }
 
-    // ── Replace container with cached data ─────────────────
+    // ── Replace container with cached data ───────────────────────
     function replaceOrdersWithCache(page) {
       if (!ordersContainer) return;
       ordersContainer.innerHTML = '';
@@ -345,7 +358,7 @@
       });
     }
 
-    // ── Fetch and cache a page ──────────────────────────────
+    // ── Fetch and cache a page ────────────────────────────────
     async function fetchPage(page) {
       if (cachedPages[page]) return cachedPages[page];
       try {
@@ -361,7 +374,7 @@
       }
     }
 
-    // ── Load and display a specific page ───────────────────
+    // ── Load and display a specific page ────────────────────
     async function loadPage(page) {
       if (page < 1 || page > totalPages) return;
       if (page === currentPage) return;
@@ -390,7 +403,7 @@
       }
     }
 
-    // ── Render pagination buttons ────────────────────────────
+    // ── Render pagination buttons ──────────────────────────
     function renderPaginationButtons(totalPagesCount) {
       if (!paginationDiv) return;
       paginationDiv.innerHTML = '';
@@ -438,7 +451,7 @@
       const total = parseInt(ordersContainer.dataset.total) || 0;
       totalPages = Math.ceil(total / perPage);
 
-      // Cache page 1 from the existing static HTML (convert to data objects)
+      // ✅ FIXED: Cache page 1 from the existing static HTML (convert to data objects) - now with ISO dates
       if (!cachedPages[1]) {
         cachedPages[1] = extractOrdersFromDOM();
       }
