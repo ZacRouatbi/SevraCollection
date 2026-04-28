@@ -412,6 +412,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+ const regForm = document.getElementById('reg-form');
+    if (regForm) {
+        regForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Client-side validation first
+            let isValid = true;
+            fields.forEach(field => {
+                const input = document.getElementById(field.id);
+                if (input) {
+                    const val = input.value.trim();
+                    if (!field.regex.test(val)) {
+                        isValid = false;
+                        const hint = document.getElementById(field.hintId);
+                        if (hint) hint.textContent = field.msg;
+                        input.style.borderColor = '#d9534f';
+                    }
+                }
+            });
+
+            if (!isValid) return;
+
+            const submitBtn = document.getElementById('reg-submit');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Création en cours...';
+
+            try {
+                const formData = new FormData(regForm);
+                const response = await fetch(regForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    showFlashMessage('success', data.message);
+                    // Clear form
+                    regForm.reset();
+                    // Switch to login tab after 2 seconds
+                    setTimeout(() => {
+                        const loginTab = document.querySelector('[data-tab="login"]');
+                        if (loginTab) loginTab.click();
+                    }, 2000);
+                } else {
+                    // Show error message
+                    const errorMsg = data.errors ? data.errors.join(', ') : (data.message || 'Erreur lors de la création du compte.');
+                    showFlashMessage('error', errorMsg);
+                }
+            } catch (error) {
+                showFlashMessage('error', 'Erreur de connexion. Veuillez réessayer.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
 </script>
 
 <style>

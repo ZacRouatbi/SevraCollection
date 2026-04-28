@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
-use App\Service\RateLimiterService; // ✅ Added
+use App\Service\RateLimiterService;
 
 class Authenticator extends AbstractAuthenticator
 {
@@ -29,7 +29,7 @@ class Authenticator extends AbstractAuthenticator
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly LoggerInterface $logger,
         private readonly string $wpUrl,
-        private readonly RateLimiterService $rateLimiter  // ✅ Added
+        private readonly RateLimiterService $rateLimiter
     ) {}
 
     public function supports(Request $request): ?bool
@@ -39,7 +39,7 @@ class Authenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        // ✅ Rate limiting for login
+        // Rate limiting for login
         $clientIp = $request->getClientIp() ?? 'unknown';
         $rateKey = 'login_' . $clientIp;
         $rateCheck = $this->rateLimiter->isLimited($rateKey, 5, 300); // 5 attempts per 5 minutes
@@ -53,6 +53,7 @@ class Authenticator extends AbstractAuthenticator
 
         $email = trim((string) $request->request->get('email', ''));
         $password = (string) $request->request->get('password', '');
+        $csrfToken = (string) $request->request->get('_csrf_token', '');
 
         if (empty($email) || empty($password)) {
             throw new CustomUserMessageAuthenticationException('Email et mot de passe requis.');
@@ -86,8 +87,6 @@ class Authenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException('Connexion au service impossible.');
         }
 
-        // REMOVED: Sensitive JWT payload logging for security
-
         $jwtParts = explode('.', $token);
         $jwtPayload = json_decode(
             base64_decode(str_pad($jwtParts[1], strlen($jwtParts[1]) % 4, '=', STR_PAD_RIGHT)),
@@ -104,7 +103,7 @@ class Authenticator extends AbstractAuthenticator
                 return new User($email, $token, $wpUserId, $roles);
             }),
             [
-                new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token'))
+                new CsrfTokenBadge('authenticate', $csrfToken)
             ]
         );
     }
@@ -140,5 +139,4 @@ class Authenticator extends AbstractAuthenticator
 
         return new RedirectResponse($this->urlGenerator->generate('home'));
     }
-
 }
