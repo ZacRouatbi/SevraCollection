@@ -216,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ✅ Expose refresh function globally
   window.refreshSevraCart = async function() {
-    console.log("Refreshing Drawer...");
     try {
         const res = await fetch(window.location.href);
         const html = await res.text();
