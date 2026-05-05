@@ -1,6 +1,7 @@
 {# templates/components/product/product_card.twig #}
-<article class="product-card flex flex-col h-full data-id="{{ product.product_id ?? product.id ?? product.sku ?? '' }}"">
-  <div class="block overflow-hidden relative group"> {# Changed <a> to <div> here to separate concerns #}
+{% set pid = product.id ?? product.product_id ?? '' %}
+<article class="product-card flex flex-col h-full" data-id="{{ pid }}">
+  <div class="block overflow-hidden relative group">
     <div class="overflow-hidden relative aspect-[3/4]">
 
       {# The Main Image Link #}
@@ -13,25 +14,70 @@
 
       {# Badges #}
       {% if product.on_sale|default(false) %}
-        <span class="absolute top-3 right-3 label px-2 py-1 z-10" style="background:var(--c-shadow); color:var(--c-snow); pointer-events: none;">
+        <span class="absolute top-3 right-3 label px-2 py-1 z-10" style="background:var(--c-shadow); color:var(--c-snow); pointer-events:none;">
           Soldes
         </span>
       {% endif %}
 
-      {# Quick-add overlay - Notice the z-20 and pointer-events-none on the wrapper #}
+      {# Quick-add overlay #}
       <div class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
            style="background:linear-gradient(to top, rgba(32,32,48,0.3) 0%, transparent 60%)">
 
-        {# THE BUTTON - added pointer-events-auto and z-20 #}
-        <button
-        type="button"
-        class="btn-primary js-quick-add pointer-events-auto"
-        style="font-size:0.68rem; padding:0.65rem 1.4rem; position: relative; z-index: 20;"
-        {# Try multiple common ID field names just in case #}
-        data-product-id="{{ product.id ?? product._id ?? product.productId ?? '' }}">
-        Ajouter au panier
-        </button>
+        {% if product.sizes|default([])|length > 0 %}
+          {# Has sizes → show "Choisir la taille" button that reveals inline picker #}
+          <button
+            type="button"
+            class="btn-primary js-card-size-trigger pointer-events-auto"
+            style="font-size:0.68rem; padding:0.65rem 1.4rem; position:relative; z-index:20;"
+            data-product-id="{{ pid }}">
+            Choisir la taille
+          </button>
+        {% else %}
+          {# No sizes → direct add to cart #}
+          <button
+            type="button"
+            class="btn-primary js-quick-add pointer-events-auto"
+            style="font-size:0.68rem; padding:0.65rem 1.4rem; position:relative; z-index:20;"
+            data-product-id="{{ pid }}">
+            Ajouter au panier
+          </button>
+        {% endif %}
       </div>
+
+      {# Inline size picker (hidden by default, shown when trigger is clicked) #}
+      {% if product.sizes|default([])|length > 0 %}
+      <div class="card-size-picker absolute inset-x-0 bottom-0 z-30 hidden"
+           data-product-id="{{ pid }}"
+           style="background:rgba(253,250,247,0.97); padding:0.75rem 0.9rem 0.9rem;">
+        <p class="label mb-2" style="font-size:0.6rem; letter-spacing:0.15em;">Choisir la taille</p>
+        <div class="flex flex-wrap gap-1 mb-3">
+          {% for size in product.sizes %}
+            <button type="button"
+              class="card-size-btn size-btn"
+              data-size="{{ size }}"
+              style="min-width:2.4rem; font-size:0.68rem; padding:0.3rem 0.6rem;">
+              {{ size }}
+            </button>
+          {% endfor %}
+        </div>
+        <div class="flex gap-2">
+          <button type="button"
+            class="btn-primary js-quick-add flex-1"
+            style="font-size:0.65rem; padding:0.55rem 0.75rem; opacity:0.4; pointer-events:none;"
+            data-product-id="{{ pid }}"
+            data-size-picker="{{ pid }}">
+            Ajouter au panier
+          </button>
+          <button type="button"
+            class="btn-ghost js-card-size-cancel"
+            style="font-size:0.7rem; padding:0.55rem 0.6rem;"
+            data-product-id="{{ pid }}">
+            ✕
+          </button>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 

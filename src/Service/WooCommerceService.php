@@ -77,6 +77,16 @@ class WooCommerceService
             $type = 'shorts';
         }
 
+        // Extract sizes from WC attributes (needed for the quick-add size picker on cards)
+        $sizes = [];
+        foreach ($p['attributes'] ?? [] as $attr) {
+            $attrName = strtolower($attr['name'] ?? '');
+            if (str_contains($attrName, 'taille') || str_contains($attrName, 'size')) {
+                $sizes = $attr['options'] ?? [];
+                break;
+            }
+        }
+
         return [
             'id'     => $p['id'] ?? 0,
             'slug'   => $p['slug'] ?? '',
@@ -84,6 +94,7 @@ class WooCommerceService
             'price'  => $p['price'] ?? '',
             'type'   => $type,
             'images' => array_column($p['images'] ?? [], 'src'),
+            'sizes'  => $sizes,
         ];
     }
 
@@ -449,60 +460,69 @@ class WooCommerceService
     }
 
     /**
-     * Find variation ID by size and color attributes
+     * Find variation ID by size and color attributes.
+     *
+     * The raw variations array is cached per product (keyed by product ID only).
+     * The size/color matching is done after retrieval so the cache is reusable
+     * across different size/color combinations for the same product.
      */
     private function findVariationId(int $productId, string $size, string $color): ?int
     {
-        // Cache variations lookup to avoid repeated API calls
-        return $this->cache->get('wc_variations_' . $productId, function() use ($productId, $size, $color) {
+        // Cache only the raw variations list, NOT the resolved variation ID.
+        // This way different size/color combos for the same product all benefit
+        // from the same cached API response.
+        $variations = $this->cache->get('wc_variations_list_' . $productId, function() use ($productId) {
             try {
                 $response = $this->client->request(
                     'GET',
                     rtrim($this->wpUrl, '/') . '/wp-json/wc/v3/products/' . $productId . '/variations',
                     [
                         'auth_basic' => [$this->wcKey, $this->wcSecret],
+                        'query'      => ['per_page' => 100],
                         'timeout'    => 10,
                     ]
                 );
 
                 if ($response->getStatusCode() !== 200) {
-                    return null;
+                    return [];
                 }
 
-                $variations = $response->toArray();
-                foreach ($variations as $variation) {
-                    $matches = true;
-                    foreach ($variation['attributes'] ?? [] as $attr) {
-                        $attrName = strtolower($attr['name'] ?? '');
-                        $attrValue = strtolower($attr['option'] ?? '');
-
-                        if (str_contains($attrName, 'taille') || str_contains($attrName, 'size')) {
-                            if ($size && strtolower($size) !== $attrValue) {
-                                $matches = false;
-                                break;
-                            }
-                        } elseif (str_contains($attrName, 'couleur') || str_contains($attrName, 'color')) {
-                            if ($color && strtolower($color) !== $attrValue) {
-                                $matches = false;
-                                break;
-                            }
-                        }
-                    }
-                    if ($matches) {
-                        return $variation['id'];
-                    }
-                }
-
-                return null;
+                return $response->toArray();
 
             } catch (\Throwable $e) {
                 $this->logger->error('Variation lookup error', [
                     'product_id' => $productId,
-                    'error' => $e->getMessage(),
+                    'error'      => $e->getMessage(),
                 ]);
-                return null;
+                return [];
             }
         }, self::PRODUCT_CACHE_TTL);
+
+        // Match the correct variation from the cached list
+        foreach ($variations as $variation) {
+            $matches = true;
+            foreach ($variation['attributes'] ?? [] as $attr) {
+                $attrName  = strtolower($attr['name']   ?? '');
+                $attrValue = strtolower($attr['option'] ?? '');
+
+                if (str_contains($attrName, 'taille') || str_contains($attrName, 'size')) {
+                    if ($size && strtolower($size) !== $attrValue) {
+                        $matches = false;
+                        break;
+                    }
+                } elseif (str_contains($attrName, 'couleur') || str_contains($attrName, 'color')) {
+                    if ($color && strtolower($color) !== $attrValue) {
+                        $matches = false;
+                        break;
+                    }
+                }
+            }
+            if ($matches) {
+                return (int) $variation['id'];
+            }
+        }
+
+        return null;
     }
 
     // WooCommerceService.php
