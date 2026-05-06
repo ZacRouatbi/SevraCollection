@@ -10,34 +10,34 @@
     let cartCsrfToken = null;
 
     // ✅ Toast timer handle (to cancel previous timeout)
-let toastTimeout = null;
+    let toastTimeout = null;
 
-function showToast(message, duration = 2800) {
-  // Remove any existing toast first
-  const existingToast = document.querySelector('.toast');
-  if (existingToast) existingToast.remove();
-  if (toastTimeout) clearTimeout(toastTimeout);
+    function showToast(message, duration = 2800) {
+        // Remove any existing toast first
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) existingToast.remove();
+        if (toastTimeout) clearTimeout(toastTimeout);
 
-  // Create new toast
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
-  document.body.appendChild(toast);
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
 
-  // Force reflow then add 'show' class for animation
-  toast.offsetHeight;
-  toast.classList.add('show');
+        // Force reflow then add 'show' class for animation
+        toast.offsetHeight;
+        toast.classList.add('show');
 
-  // Schedule removal
-  toastTimeout = setTimeout(() => {
-    toast.classList.remove('show');
-    // After transition ends (0.35s), remove from DOM
-    setTimeout(() => {
-      if (toast.parentNode) toast.remove();
-    }, 350);
-    toastTimeout = null;
-  }, duration);
-}
+        // Schedule removal
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+            // After transition ends (0.35s), remove from DOM
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 350);
+            toastTimeout = null;
+        }, duration);
+    }
 
     // Make it globally available (used in other scripts)
     window.showToast = window.showToast || showToast;
@@ -109,6 +109,27 @@ function showToast(message, duration = 2800) {
                 if (!productId || productId === "") {
                     const article = btn.closest('article');
                     productId = article?.dataset.id || article?.getAttribute('data-id');
+                }
+
+                // ✅ NEW: Get size from button if it was set by size picker
+                if (btn.dataset.size) {
+                    size = btn.dataset.size;
+                }
+
+                // For card picker, also check if there's a selected size in the same picker container
+                const parentPicker = btn.closest('.card-size-picker');
+                if (!size && parentPicker) {
+                    const selectedSizeBtn = parentPicker.querySelector('.card-size-btn.selected');
+                    if (selectedSizeBtn) {
+                        size = selectedSizeBtn.dataset.size;
+                    }
+                }
+
+                // If size is required (product has sizes) but none selected -> show error
+                const card = btn.closest('.product-card');
+                if (card && card.querySelector('.card-size-picker') && !size) {
+                    showToast('Veuillez sélectionner une taille.');
+                    return;
                 }
             }
 

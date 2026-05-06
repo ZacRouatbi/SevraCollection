@@ -374,90 +374,118 @@ class WooCommerceService
     }
 
     public function createOrder(
-        array $data,
-        array $cartItems,
-        float $total,
-        string $paymentMethod,
-        ?int $customerId = null,
-        ?string $customerToken = null
-    ): array {
-        $paymentMapping = [
-            'cash_on_delivery' => 'cod',
-            'clicktopay'       => 'clicktopay',
-        ];
-        $paymentMethodId = $paymentMapping[$paymentMethod] ?? 'cod';
+    array $data,
+    array $cartItems,
+    float $total,
+    string $paymentMethod,
+    ?int $customerId = null,
+    ?string $customerToken = null
+): array {
+    $paymentMapping = [
+        'cash_on_delivery' => 'cod',
+        'clicktopay'       => 'clicktopay',
+    ];
+    $paymentMethodId = $paymentMapping[$paymentMethod] ?? 'cod';
 
-        // Build billing/shipping arrays
-        $billing = [
-            'first_name' => $data['first_name'],
-            'last_name'  => $data['last_name'],
-            'email'      => $data['email'],
-            'phone'      => $data['phone'] ?? '',
-            'address_1'  => $data['address'],
-            'city'       => $data['city'],
-            'postcode'   => $data['zip'] ?? '',
-            'country'    => $data['country'] ?? 'TN',
-        ];
-        $shipping = $billing;
+    $billing = [
+        'first_name' => $data['first_name'],
+        'last_name'  => $data['last_name'],
+        'email'      => $data['email'],
+        'phone'      => $data['phone'] ?? '',
+        'address_1'  => $data['address'],
+        'city'       => $data['city'],
+        'postcode'   => $data['zip'] ?? '',
+        'country'    => $data['country'] ?? 'TN',
+    ];
+    $shipping = $billing;
 
-        // Build line items (use variation_id if size/color provided – you'll need the findVariationId helper)
-        $lineItems = [];
-        foreach ($cartItems as $item) {
-            $lineItem = [
-                'product_id' => (int) $item['product_id'],
-                'quantity'   => (int) $item['qty'],
-            ];
-            $size  = $item['size'] ?? '';
-            $color = $item['color'] ?? '';
-            if ($size || $color) {
-                $variationId = $this->findVariationId((int) $item['product_id'], $size, $color);
-                if ($variationId) {
-                    $lineItem['variation_id'] = $variationId;
-                } else {
-                    throw new \RuntimeException(sprintf('Variation introuvable pour « %s » (%s / %s).', $item['name'], $size, $color));
-                }
-            }
-            $lineItems[] = $lineItem;
+    $lineItems = [];
+    foreach ($cartItems as $item) {
+        $productId = (int) $item['product_id'];
+        $wcProduct = $this->getProductById($productId); // fetch product data
+        if (!$wcProduct) {
+            throw new \RuntimeException(sprintf('Produit introuvable : %s', $item['name']));
         }
 
-        $payload = [
-            'customer_id'    => $customerId,
-            'payment_method' => $paymentMethodId,
-            'billing'        => $billing,
-            'shipping'       => $shipping,
-            'line_items'     => $lineItems,
-            'customer_note'  => $data['notes'] ?? '',
+        $lineItem = [
+            'product_id' => $productId,
+            'quantity'   => (int) $item['qty'],
         ];
 
-        try {
-            $response = $this->client->request(
-                'POST',
-                rtrim($this->wpUrl, '/') . '/wp-json/sevra/v1/create-order',
-                [
-                    'headers' => [
-                        'X-Sevra-Secret' => $this->wpApiSecret,
-                        'Content-Type'   => 'application/json',
-                    ],
-                    'json'    => $payload,
-                    'timeout' => 15,
-                ]
-            );
+        $size  = $item['size'] ?? '';
+        $color = $item['color'] ?? '';
 
-            if ($response->getStatusCode() !== 201) {
-                $body = $response->getContent(false);
-                $this->logger->error('Custom order creation failed', ['status' => $response->getStatusCode(), 'body' => $body]);
-                throw new \RuntimeException('La commande n\'a pas pu être créée. Veuillez réessayer.');
+        // Variable product: use variation_id
+        if (($size || $color) && ($wcProduct['type'] ?? 'simple') === 'variable') {
+            $variationId = $this->findVariationId($productId, $size, $color);
+            if ($variationId) {
+                $lineItem['variation_id'] = $variationId;
+            } else {
+                throw new \RuntimeException(sprintf(
+                    'Variation introuvable pour « %s » (taille: %s, couleur: %s).',
+                    $item['name'],
+                    $size,
+                    $color ?: 'aucune'
+                ));
             }
-
-            $order = $response->toArray();
-            // Return a normalized array with at least 'id' for the flash message
-            return ['id' => $order['order_id']];
-
-        } catch (TransportExceptionInterface $e) {
-            $this->logger->error('Custom order creation transport error', ['error' => $e->getMessage()]);
-            throw new \RuntimeException('Service de commande indisponible.');
         }
+        // Simple product: send size/color as line item meta_data
+        elseif ($size || $color) {
+            $lineItem['meta_data'] = [];
+            if ($size) {
+                $lineItem['meta_data'][] = [
+                    'key'   => 'Taille',
+                    'value' => $size,
+                ];
+            }
+            if ($color) {
+                $lineItem['meta_data'][] = [
+                    'key'   => 'Couleur',
+                    'value' => $color,
+                ];
+            }
+        }
+
+        $lineItems[] = $lineItem;
     }
+
+    $payload = [
+        'customer_id'    => $customerId,
+        'payment_method' => $paymentMethodId,
+        'billing'        => $billing,
+        'shipping'       => $shipping,
+        'line_items'     => $lineItems,
+        'customer_note'  => $data['notes'] ?? '',
+    ];
+
+    try {
+        $response = $this->client->request(
+            'POST',
+            rtrim($this->wpUrl, '/') . '/wp-json/sevra/v1/create-order',
+            [
+                'headers' => [
+                    'X-Sevra-Secret' => $this->wpApiSecret,
+                    'Content-Type'   => 'application/json',
+                ],
+                'json'    => $payload,
+                'timeout' => 15,
+            ]
+        );
+
+        if ($response->getStatusCode() !== 201) {
+            $body = $response->getContent(false);
+            $this->logger->error('Custom order creation failed', ['status' => $response->getStatusCode(), 'body' => $body]);
+            throw new \RuntimeException('La commande n\'a pas pu être créée. Veuillez réessayer.');
+        }
+
+        $order = $response->toArray();
+        return ['id' => $order['order_id']];
+
+    } catch (TransportExceptionInterface $e) {
+        $this->logger->error('Custom order creation transport error', ['error' => $e->getMessage()]);
+        throw new \RuntimeException('Service de commande indisponible.');
+    }
+}
 
     /**
      * Find variation ID by size and color attributes.

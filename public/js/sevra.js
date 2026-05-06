@@ -1,5 +1,6 @@
 // sevra.js - Sevra Collection frontend interactions
-// Handles: auth modal, cart drawer, quantity steppers, search, toast, page transitions
+// Handles: auth modal, cart drawer, quantity steppers, search, toast, page transitions,
+//          and product card size picker
 
 // ✅ CSRF Token cache for cart operations
 let cartCsrfToken = null;
@@ -174,7 +175,7 @@ function triggerQtyChange(stepper, val) {
   stepper.dispatchEvent(new CustomEvent('qty:change', { detail: { qty: val }, bubbles: true }));
 }
 
-/* ─── Size Selector ──────────────────────────────────── */
+/* ─── Size Selector (product page) ──────────────────────────────────── */
 function initSizeSelector() {
   document.querySelectorAll('.size-selector').forEach(group => {
     group.querySelectorAll('.size-btn:not(.out-of-stock)').forEach(btn => {
@@ -184,6 +185,92 @@ function initSizeSelector() {
         const sizeInput = group.closest('form')?.querySelector('[name="size"]');
         if (sizeInput) sizeInput.value = btn.dataset.size;
       });
+    });
+  });
+}
+
+/* ─── NEW: Product Card Size Picker (inline size selection) ────────── */
+function initCardSizePicker() {
+  // Handle "Choisir la taille" trigger
+  document.querySelectorAll('.js-card-size-trigger').forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const card = trigger.closest('.product-card');
+      if (!card) return;
+
+      const picker = card.querySelector('.card-size-picker');
+      if (!picker) return;
+
+      // Hide the hover overlay button container (the trigger's parent)
+      const overlayDiv = trigger.closest('.absolute.inset-0.flex.items-end.justify-center');
+      if (overlayDiv) overlayDiv.style.opacity = '0';
+      if (overlayDiv) overlayDiv.style.pointerEvents = 'none';
+
+      // Show picker
+      picker.classList.remove('hidden');
+      picker.style.display = 'block';
+    });
+  });
+
+  // Handle size button click inside picker
+  document.querySelectorAll('.card-size-picker .card-size-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const picker = btn.closest('.card-size-picker');
+      if (!picker) return;
+
+      // Remove selected class from all size buttons in this picker
+      picker.querySelectorAll('.card-size-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      // Find the associated "Ajouter au panier" button inside this picker
+      const addBtn = picker.querySelector('.js-quick-add');
+      if (addBtn) {
+        // Store selected size as data-size on the add button
+        addBtn.dataset.size = btn.dataset.size;
+        // Enable the button (remove visual disabled state)
+        addBtn.style.opacity = '1';
+        addBtn.style.pointerEvents = 'auto';
+      }
+    });
+  });
+
+  // Handle cancel button inside picker
+  document.querySelectorAll('.js-card-size-cancel').forEach(cancelBtn => {
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const picker = cancelBtn.closest('.card-size-picker');
+      if (!picker) return;
+      const card = picker.closest('.product-card');
+      if (!card) return;
+
+      // Hide picker
+      picker.classList.add('hidden');
+      picker.style.display = 'none';
+
+      // Reset the add button inside picker
+      const addBtn = picker.querySelector('.js-quick-add');
+      if (addBtn) {
+        addBtn.dataset.size = '';
+        addBtn.style.opacity = '0.4';
+        addBtn.style.pointerEvents = 'none';
+      }
+
+      // Remove any selected size style
+      picker.querySelectorAll('.card-size-btn').forEach(b => b.classList.remove('selected'));
+
+      // Show the hover overlay again
+      const overlayDiv = card.querySelector('.absolute.inset-0.flex.items-end.justify-center');
+      if (overlayDiv) {
+        overlayDiv.style.opacity = '';
+        overlayDiv.style.pointerEvents = '';
+      }
     });
   });
 }
@@ -217,7 +304,6 @@ function initSearch() {
   const input   = document.getElementById('search-input');
   if (!overlay) return;
 
-  // ✅ FIXED: Pure CSS transitions instead of GSAP
   const openSearch = () => {
     overlay.style.transition = 'opacity 0.4s ease';
     overlay.style.opacity = '0';
@@ -225,15 +311,8 @@ function initSearch() {
     overlay.style.pointerEvents = 'auto';
     document.body.style.overflow = 'hidden';
 
-    // Trigger reflow before starting transition
     overlay.offsetHeight;
-
     overlay.style.opacity = '1';
-
-    // setTimeout(() => {
-    //   input?.focus();
-    //   if (!categoriesLoaded) loadCategories();
-    // }, 50);
   };
 
   const closeSearch = () => {
@@ -272,7 +351,6 @@ function initSearch() {
   const resultsDiv = document.getElementById('search-results');
   const suggestionsDiv = document.getElementById('search-suggestions');
 
-  // ── Load categories (cached via server) ─────────────────
   async function loadCategories() {
     try {
       const res = await fetch('/api/categories');
@@ -280,7 +358,6 @@ function initSearch() {
       const categories = await res.json();
       renderSuggestions(categories);
     } catch (err) {
-      // Fallback if API fails
       renderSuggestions([
         { name: 'Ensemble Lin', slug: 'ensemble-lin' },
         { name: 'Nouveautés',   slug: 'nouveautes' }
@@ -347,7 +424,6 @@ function initSearch() {
 let toastTimeout = null;
 
 function showToast(message, duration = 2800) {
-  // Clear any pending removal
   if (toastTimeout) clearTimeout(toastTimeout);
 
   let toast = document.querySelector('.toast');
@@ -360,14 +436,12 @@ function showToast(message, duration = 2800) {
   toast.textContent = message;
   toast.classList.add('show');
 
-  // Store the timeout ID so we can cancel it next time
   toastTimeout = setTimeout(() => {
     toast.classList.remove('show');
     toastTimeout = null;
   }, duration);
 }
 window.showToast = showToast;
-
 
 /* ─── Page Enter Animation ───────────────────────────────────── */
 function initPageTransition() {
@@ -394,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
   new CartDrawer();
   initQtySteppers();
   initSizeSelector();
+  initCardSizePicker();
   initFilterChips();
   initSearch();
   initPageTransition();
