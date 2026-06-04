@@ -378,46 +378,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = input.value.trim();
             if (val === "") return;
             if (field.regex.test(val)) {
-                hint.textContent = "";
+                if (hint) hint.textContent = "";
                 input.style.borderColor = "var(--c-olive)";
             } else {
-                hint.textContent = field.msg;
+                if (hint) hint.textContent = field.msg;
                 input.style.borderColor = "#d9534f";
             }
         });
 
         input.addEventListener('input', () => {
-            hint.textContent = "";
+            if (hint) hint.textContent = "";
             input.style.borderColor = "rgba(118,128,100,0.2)";
         });
     });
 
+    // 6. REGISTRATION FORM SUBMIT HANDLING
     const regForm = document.getElementById('reg-form');
-    if (regForm) {
-        regForm.addEventListener('submit', (e) => {
-            let isValid = true;
-            fields.forEach(field => {
-                const input = document.getElementById(field.id);
-                if (input) {
-                    const val = input.value.trim();
-                    if (!field.regex.test(val)) {
-                        isValid = false;
-                        const hint = document.getElementById(field.hintId);
-                        if (hint) hint.textContent = field.msg;
-                        input.style.borderColor = '#d9534f';
-                    }
-                }
-            });
-            if (!isValid) e.preventDefault();
-        });
-    }
-});
- const regForm = document.getElementById('reg-form');
     if (regForm) {
         regForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Client-side validation first
             let isValid = true;
             fields.forEach(field => {
                 const input = document.getElementById(field.id);
@@ -450,17 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (data.success) {
-                    // Show success message
                     showFlashMessage('success', data.message);
-                    // Clear form
                     regForm.reset();
-                    // Switch to login tab after 2 seconds
                     setTimeout(() => {
                         const loginTab = document.querySelector('[data-tab="login"]');
                         if (loginTab) loginTab.click();
                     }, 2000);
                 } else {
-                    // Show error message
                     const errorMsg = data.errors ? data.errors.join(', ') : (data.message || 'Erreur lors de la création du compte.');
                     showFlashMessage('error', errorMsg);
                 }
@@ -472,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-</script>
+});
 
 <style>
   .field-hint { font-size: 0.65rem; color: #d9534f; margin-top: 0.35rem; min-height: 1.1em; font-family: var(--font-body); }

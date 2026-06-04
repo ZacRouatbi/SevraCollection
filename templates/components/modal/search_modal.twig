@@ -11,13 +11,15 @@
         </button>
 
         {# Search Input #}
-        <input type="text" id="search-input" placeholder="Que recherchez-vous ?" autocomplete="off"
+        <input type="text" id="search-overlay-input" placeholder="Que recherchez-vous ?" autocomplete="off"
                class="w-full bg-transparent text-2xl md:text-5xl font-display italic text-shadow border-b border-shadow/10 outline-none pb-4 placeholder:text-shadow/20">
 
         {# Results dropdown #}
         <div id="search-results" class="hidden mt-4 max-h-[60vh] overflow-y-auto rounded-sm shadow-2xl border border-olive/10"
              style="background: rgba(253,250,247,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
         </div>
+
+        <div id="search-suggestions" class="hidden mt-3 flex flex-wrap gap-2"></div>
 
         {# ✅ FIXED: 2 simple redirect buttons (always visible) #}
         <div class="mt-4 flex flex-wrap gap-2">
@@ -35,38 +37,32 @@
 </div>
 
 <script>
-  (function() {
-    const overlay    = document.getElementById('search-overlay');
-    const input      = document.getElementById('search-input');
-    const resultsDiv = document.getElementById('search-results');
-    const closeBtn   = document.getElementById('search-close');
+  // Initialize search modal immediately so other scripts can call window.openSearch
+  const _search_overlay = document.getElementById('search-overlay');
+  const _search_input = document.getElementById('search-overlay-input');
+  const _search_results = document.getElementById('search-results');
+  const _search_close = document.getElementById('search-close');
 
-    if (!overlay || !input) return;
-
+  if (_search_overlay && _search_input) {
     let debounceTimer;
 
-    // ✅ FIXED: Pure CSS transitions (no GSAP)
     const openSearch = () => {
+      const overlay = _search_overlay;
       overlay.style.transition = 'opacity 0.4s ease';
       overlay.style.opacity = '0';
       overlay.style.visibility = 'visible';
       overlay.style.pointerEvents = 'auto';
       document.body.style.overflow = 'hidden';
-
-      // Trigger reflow
+      // trigger reflow
       overlay.offsetHeight;
-
       overlay.style.opacity = '1';
-
-      setTimeout(() => {
-        input?.focus();
-      }, 50);
+      setTimeout(() => { _search_input.focus(); }, 50);
     };
 
     const closeSearch = () => {
+      const overlay = _search_overlay;
       overlay.style.transition = 'opacity 0.3s ease';
       overlay.style.opacity = '0';
-
       setTimeout(() => {
         overlay.style.visibility = 'hidden';
         overlay.style.pointerEvents = 'none';
@@ -76,32 +72,36 @@
     };
 
     function resetSearch() {
-      input.value = '';
-      resultsDiv.innerHTML = '';
-      resultsDiv.classList.add('hidden');
+      _search_input.value = '';
+      if (_search_results) {
+        _search_results.innerHTML = '';
+        _search_results.classList.add('hidden');
+      }
     }
 
+    // Expose immediately
     window.openSearch = openSearch;
 
-    // ✅ Live search with debounce
-    input.addEventListener('input', function() {
+    _search_input.addEventListener('input', function() {
       const query = this.value.trim();
       clearTimeout(debounceTimer);
-
       if (query.length < 2) {
-        resultsDiv.innerHTML = '';
-        resultsDiv.classList.add('hidden');
+        if (_search_results) {
+          _search_results.innerHTML = '';
+          _search_results.classList.add('hidden');
+        }
         return;
       }
 
       debounceTimer = setTimeout(async () => {
+        if (!_search_results) return;
         try {
           const res = await fetch('/api/search?q=' + encodeURIComponent(query));
           const products = await res.json();
           if (products.length === 0) {
-            resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-mauve">Aucun résultat</div>';
+            _search_results.innerHTML = '<div class="p-4 text-center text-sm text-mauve">Aucun résultat</div>';
           } else {
-            resultsDiv.innerHTML = products.map(p => `
+            _search_results.innerHTML = products.map(p => `
               <a href="/produit/${p.slug}" class="flex items-center gap-4 p-3 hover:bg-white/30 transition-colors border-b border-shadow/5 last:border-0">
                 <img src="${p.image}" alt="${p.name}" class="w-12 h-16 object-cover flex-shrink-0" />
                 <div class="flex-1 min-w-0">
@@ -111,23 +111,16 @@
               </a>
             `).join('');
           }
-          resultsDiv.classList.remove('hidden');
+          _search_results.classList.remove('hidden');
         } catch (err) {
-          resultsDiv.innerHTML = '<div class="p-4 text-center text-sm text-red-400">Erreur de recherche</div>';
-          resultsDiv.classList.remove('hidden');
+          _search_results.innerHTML = '<div class="p-4 text-center text-sm text-red-400">Erreur de recherche</div>';
+          _search_results.classList.remove('hidden');
         }
       }, 300);
     });
 
-    // Close buttons
-    closeBtn?.addEventListener('click', closeSearch);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeSearch();
-    });
-
-    // Close when pressing Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.style.visibility === 'visible') closeSearch();
-    });
-  })();
+    _search_close?.addEventListener('click', closeSearch);
+    _search_overlay.addEventListener('click', (e) => { if (e.target === _search_overlay) closeSearch(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && _search_overlay.style.visibility === 'visible') closeSearch(); });
+  }
 </script>

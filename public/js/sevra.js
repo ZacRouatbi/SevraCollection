@@ -300,9 +300,33 @@ function applyFilters() {
 
 /* ─── Search ─────────────────────────────────────────── */
 function initSearch() {
-  const overlay = document.getElementById('search-overlay');
-  const input   = document.getElementById('search-input');
-  if (!overlay) return;
+  // Ensure an overlay exists. If the template didn't render it, create one dynamically.
+  let overlay = document.getElementById('search-overlay');
+  const ensureOverlay = () => {
+    if (overlay) return overlay;
+    const wrapper = document.createElement('div');
+    wrapper.id = 'search-overlay';
+    wrapper.className = 'fixed inset-0 z-[999] flex items-start justify-center pt-20 md:pt-32 px-6';
+    wrapper.style.cssText = 'opacity:0; visibility:hidden; pointer-events:none; background-color: rgba(253,250,247,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);';
+    wrapper.innerHTML = `
+      <div class="relative w-full max-w-3xl" id="search-content">
+        <button id="search-close" class="absolute -top-12 md:-top-16 right-0 text-shadow hover:rotate-90 transition-transform duration-300" aria-label="Fermer">
+          <svg width="28" height="28" class="md:w-8 md:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <input type="text" id="search-overlay-input" placeholder="Que recherchez-vous ?" autocomplete="off" class="w-full bg-transparent text-2xl md:text-5xl font-display italic text-shadow border-b border-shadow/10 outline-none pb-4 placeholder:text-shadow/20">
+        <div id="search-results" class="hidden mt-4 max-h-[60vh] overflow-y-auto rounded-sm shadow-2xl border border-olive/10" style="background: rgba(253,250,247,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);"></div>
+        <div id="search-suggestions" class="hidden mt-3 flex flex-wrap gap-2"></div>
+      </div>
+    `;
+    document.body.appendChild(wrapper);
+    overlay = wrapper;
+    return overlay;
+  };
+
+  overlay = ensureOverlay();
+  const input = document.getElementById('search-overlay-input');
+  const resultsDiv = document.getElementById('search-results');
+  const suggestionsDiv = document.getElementById('search-suggestions');
 
   const openSearch = () => {
     overlay.style.transition = 'opacity 0.4s ease';
@@ -310,15 +334,18 @@ function initSearch() {
     overlay.style.visibility = 'visible';
     overlay.style.pointerEvents = 'auto';
     document.body.style.overflow = 'hidden';
-
     overlay.offsetHeight;
     overlay.style.opacity = '1';
+    setTimeout(() => { try { input.focus(); } catch(e){} }, 50);
+    if (!suggestionsDiv.dataset.loaded) {
+      loadCategories();
+      suggestionsDiv.dataset.loaded = '1';
+    }
   };
 
   const closeSearch = () => {
     overlay.style.transition = 'opacity 0.3s ease';
     overlay.style.opacity = '0';
-
     setTimeout(() => {
       overlay.style.visibility = 'hidden';
       overlay.style.pointerEvents = 'none';
@@ -330,10 +357,8 @@ function initSearch() {
 
   function resetSearch() {
     if (input) input.value = '';
-    resultsDiv.innerHTML = '';
-    resultsDiv.classList.add('hidden');
-    suggestionsDiv.innerHTML = '';
-    suggestionsDiv.classList.add('hidden');
+    if (resultsDiv) { resultsDiv.innerHTML = ''; resultsDiv.classList.add('hidden'); }
+    if (suggestionsDiv) { suggestionsDiv.innerHTML = ''; suggestionsDiv.classList.add('hidden'); }
   }
 
   document.querySelectorAll('[data-search-open]').forEach(btn => {
@@ -347,10 +372,6 @@ function initSearch() {
   });
 
   let debounceTimer;
-  let categoriesLoaded = false;
-  const resultsDiv = document.getElementById('search-results');
-  const suggestionsDiv = document.getElementById('search-suggestions');
-
   async function loadCategories() {
     try {
       const res = await fetch('/api/categories');
@@ -376,12 +397,9 @@ function initSearch() {
       const btn = document.createElement('button');
       btn.className = 'px-4 md:px-5 py-2 border border-shadow/10 rounded-full text-shadow hover:bg-shadow hover:text-cream transition-all duration-300 text-xs md:text-sm';
       btn.textContent = cat.name;
-      btn.addEventListener('click', () => {
-        window.location.href = '/shop?category=' + encodeURIComponent(cat.slug);
-      });
+      btn.addEventListener('click', () => { window.location.href = '/shop?category=' + encodeURIComponent(cat.slug); });
       suggestionsDiv.appendChild(btn);
     });
-    categoriesLoaded = true;
   }
 
   input?.addEventListener('input', debounce(e => {
@@ -389,8 +407,7 @@ function initSearch() {
     clearTimeout(debounceTimer);
 
     if (q.length < 2) {
-      resultsDiv.innerHTML = '';
-      resultsDiv.classList.add('hidden');
+      if (resultsDiv) { resultsDiv.innerHTML = ''; resultsDiv.classList.add('hidden'); }
       return;
     }
 
